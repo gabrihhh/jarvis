@@ -1,0 +1,33 @@
+{
+  "name": "@gabrihhh/claude-usage",
+  "version": "1.0.0",
+  "description": "Beautiful terminal dashboard + status bar for Claude Code usage stats",
+  "bin": {
+    "claude-usage": "bin/claude-usage.js"
+  },
+  "main": "./src/index.js",
+  "scripts": {
+    "start": "node bin/claude-usage.js"
+  },
+  "files": [
+    "bin/",
+    "src/"
+  ],
+  "keywords": [
+    "claude",
+    "anthropic",
+    "claude-code",
+    "usage",
+    "stats",
+    "cli",
+    "status-bar"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "^5.3.0"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
