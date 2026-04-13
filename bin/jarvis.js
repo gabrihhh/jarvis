@@ -60,13 +60,14 @@ if (args.includes('--graph')) {
   writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
   console.log('  ✓ Status bar configured');
 
-  // Slash commands → ~/.claude/commands/
-  const commandsDir = join(homedir(), '.claude', 'commands');
-  mkdirSync(commandsDir, { recursive: true });
-  const srcCommands = join(__dir, '../.claude/commands');
-  for (const file of ['setup-memory.md', 'memory-index.md']) {
-    copyFileSync(join(srcCommands, file), join(commandsDir, file));
-    console.log(`  ✓ Slash command /${file.replace('.md', '')} installed`);
+  // Slash commands → ~/.claude/skills/<name>/SKILL.md
+  const skillsDir = join(homedir(), '.claude', 'skills');
+  const srcSkills = join(__dir, '../.claude/skills');
+  for (const skill of ['setup-memory', 'memory-index']) {
+    const destDir = join(skillsDir, skill);
+    mkdirSync(destDir, { recursive: true });
+    copyFileSync(join(srcSkills, skill, 'SKILL.md'), join(destDir, 'SKILL.md'));
+    console.log(`  ✓ Slash command /${skill} installed`);
   }
 
   console.log('\n  Restart Claude Code to activate.\n');

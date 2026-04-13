@@ -1,6 +1,6 @@
 {
   "name": "@gabrihhh/jarvis",
-  "version": "2.0.2",
+  "version": "2.0.4",
   "description": "Claude Code terminal dashboard + semantic memory graph via Neo4j",
   "bin": {
     "jarvis": "bin/jarvis.js",
@@ -13,7 +13,7 @@
   "files": [
     "bin/",
     "src/",
-    ".claude/"
+    ".claude/skills/"
   ],
   "keywords": [
     "claude",
