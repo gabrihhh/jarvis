@@ -1,13 +1,14 @@
 import { Chalk } from 'chalk';
+import { readFileSync, existsSync } from 'fs';
+import { join } from 'path';
+import { homedir } from 'os';
 import { readAllUsage, getCurrentSessionFile, readCurrentSessionUsage } from './reader.js';
-import { aggregateStats, aggregateSession, formatCost } from './calculator.js';
+import { aggregateStats, aggregateSession } from './calculator.js';
 
 const chalk = new Chalk({ level: 3 });
 
-const PINK   = '#f472b6';
-const BLUE   = '#60a5fa';
-const CYAN   = '#22d3ee';
-const DIM    = '#444444';
+const PINK = '#f472b6';
+const CYAN = '#22d3ee';
 
 function bar(percent, width = 8) {
   const filled = Math.round((percent / 100) * width);
@@ -15,10 +16,37 @@ function bar(percent, width = 8) {
   return '█'.repeat(filled) + '░'.repeat(empty);
 }
 
+function readTriggerMode() {
+  try {
+    const cfg = JSON.parse(readFileSync(join(homedir(), '.claude-memory.json'), 'utf8'));
+    return cfg.trigger || 'session';
+  } catch { return 'off'; }
+}
+
+function buildBox(inner, color) {
+  return [
+    chalk.hex(color).bold(`╭${'─'.repeat(inner.length)}╮`),
+    chalk.hex(color).bold(`│${inner}│`),
+    chalk.hex(color).bold(`╰${'─'.repeat(inner.length)}╯`),
+  ];
+}
+
+function joinBoxes(left, right) {
+  return left[0] + right[0] + '\n' +
+         left[1] + right[1] + '\n' +
+         left[2] + right[2];
+}
+
 export function renderLine() {
+  const mode = readTriggerMode();
+  const triggerInner = ` TRIGGER ${mode.toUpperCase()} `;
+  const rightBox = buildBox(triggerInner, PINK);
+
   const allEntries = readAllUsage();
+
   if (!allEntries.length) {
-    process.stdout.write('claude: no data');
+    const leftBox = buildBox(` CONTEXT ${'░'.repeat(8)} 0% `, CYAN);
+    process.stdout.write(joinBoxes(leftBox, rightBox));
     return;
   }
 
@@ -28,30 +56,12 @@ export function renderLine() {
   const sessionEntries = sessionId ? readCurrentSessionUsage(sessionId) : [];
   const session = aggregateSession(sessionEntries);
 
-  const { monthly, weekly, daily } = stats;
-
-  const weeklyPct = monthly.total > 0 ? Math.round((weekly.total / monthly.total) * 100) : 0;
-  const todayPct  = monthly.total > 0 ? Math.round((daily.total  / monthly.total) * 100) : 0;
-
   if (!session) {
-    const inner = ` CONTEXT ${'░'.repeat(8)} 0% `;
-    const top    = `╭${'─'.repeat(inner.length)}╮`;
-    const bottom = `╰${'─'.repeat(inner.length)}╯`;
-    process.stdout.write(
-      chalk.hex(CYAN).bold(top)         + '\n' +
-      chalk.hex(CYAN).bold(`│${inner}│`) + '\n' +
-      chalk.hex(CYAN).bold(bottom)
-    );
+    const leftBox = buildBox(` CONTEXT ${'░'.repeat(8)} 0% `, CYAN);
+    process.stdout.write(joinBoxes(leftBox, rightBox));
     return;
   }
 
-  const inner = ` CONTEXT ${bar(session.percent)} ${session.percent}% `;
-  const top    = `╭${'─'.repeat(inner.length)}╮`;
-  const bottom = `╰${'─'.repeat(inner.length)}╯`;
-
-  process.stdout.write(
-    chalk.hex(CYAN).bold(top)    + '\n' +
-    chalk.hex(CYAN).bold(`│${inner}│`) + '\n' +
-    chalk.hex(CYAN).bold(bottom)
-  );
+  const leftBox = buildBox(` CONTEXT ${bar(session.percent)} ${session.percent}% `, CYAN);
+  process.stdout.write(joinBoxes(leftBox, rightBox));
 }
