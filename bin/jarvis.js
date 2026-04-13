@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { run } from '../src/index.js';
 import { renderLine } from '../src/statusline.js';
-import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync, copyFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { homedir } from 'os';
 import { exec } from 'child_process';
@@ -48,6 +48,9 @@ if (args.includes('--graph')) {
     if (err) console.error(`  Could not open browser automatically. Visit ${url} manually.\n`);
   });
 } else if (args.includes('--setup')) {
+  const __dir = dirname(fileURLToPath(import.meta.url));
+
+  // Status bar
   const settingsPath = join(homedir(), '.claude', 'settings.json');
   let settings = {};
   if (existsSync(settingsPath)) {
@@ -55,7 +58,18 @@ if (args.includes('--graph')) {
   }
   settings.statusLine = { type: 'command', command: 'jarvis --line' };
   writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
-  console.log('  Status bar configured. Restart Claude to activate.\n');
+  console.log('  ✓ Status bar configured');
+
+  // Slash commands → ~/.claude/commands/
+  const commandsDir = join(homedir(), '.claude', 'commands');
+  mkdirSync(commandsDir, { recursive: true });
+  const srcCommands = join(__dir, '../.claude/commands');
+  for (const file of ['setup-memory.md', 'memory-index.md']) {
+    copyFileSync(join(srcCommands, file), join(commandsDir, file));
+    console.log(`  ✓ Slash command /${file.replace('.md', '')} installed`);
+  }
+
+  console.log('\n  Restart Claude Code to activate.\n');
 } else if (args.includes('--line') || args.includes('-l')) {
   renderLine();
 } else if (args.includes('--watch') || args.includes('-w')) {
