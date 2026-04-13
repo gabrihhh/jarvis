@@ -1,7 +1,28 @@
-import { existsSync, writeFileSync, readFileSync, readdirSync, statSync } from 'fs';
+import { existsSync, writeFileSync, readFileSync, readdirSync, statSync, openSync, writeSync, closeSync } from 'fs';
 import { join } from 'path';
 import { tmpdir, homedir } from 'os';
 import { runQuery, closeDriver } from './neo4j-client.js';
+
+const GREEN = '\x1b[38;2;74;222;128m\x1b[1m';
+const RESET = '\x1b[0m';
+
+async function flashLoaded(projectName, branch) {
+  try {
+    const inner = ` ⬡ ${projectName} [${branch}] loaded `;
+    const top    = `╭${'─'.repeat(inner.length)}╮`;
+    const bottom = `╰${'─'.repeat(inner.length)}╯`;
+
+    const tty = openSync('/dev/tty', 'w');
+    writeSync(tty, `${GREEN}${top}${RESET}\n${GREEN}│${inner}│${RESET}\n${GREEN}${bottom}${RESET}\n`);
+    closeSync(tty);
+
+    await new Promise(r => setTimeout(r, 1500));
+
+    const tty2 = openSync('/dev/tty', 'w');
+    writeSync(tty2, `\x1b[3A\x1b[2K\x1b[1B\x1b[2K\x1b[1B\x1b[2K\x1b[3A`);
+    closeSync(tty2);
+  } catch { /* ambiente sem TTY — silencioso */ }
+}
 
 const CONFIG_PATH = join(homedir(), '.claude-memory.json');
 
@@ -56,6 +77,8 @@ export async function queryByPath(cwd) {
   const modules = r.get('modules').map(m => m.properties);
   const concepts = [...new Set(r.get('concepts'))].filter(Boolean);
   const patterns = [...new Set(r.get('patterns'))].filter(Boolean);
+
+  if (mode === 'session') await flashLoaded(p.name, p.branch);
 
   return [
     `## Contexto do Repositório (jarvis-memory)`,
