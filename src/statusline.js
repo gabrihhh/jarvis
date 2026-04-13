@@ -1,5 +1,5 @@
 import { Chalk } from 'chalk';
-import { readFileSync, existsSync } from 'fs';
+import { readFileSync, existsSync, unlinkSync } from 'fs';
 import { join } from 'path';
 import { homedir, tmpdir } from 'os';
 import { readAllUsage, getCurrentSessionFile, readCurrentSessionUsage } from './reader.js';
@@ -38,9 +38,21 @@ function joinBoxes(...boxes) {
          boxes[0][2] + boxes.slice(1).map(b => b[2]).join('');
 }
 
+const MEMORY_LOCK_STALE_MS = 5 * 60 * 1000; // 5 min — ignora locks de sessões mortas
+
 function isMemoryLoaded(sessionId) {
   if (!sessionId) return false;
-  return existsSync(join(tmpdir(), `jarvis-memory-${sessionId}.lock`));
+  const lockPath = join(tmpdir(), `jarvis-memory-${sessionId}.lock`);
+  if (!existsSync(lockPath)) return false;
+  try {
+    const ts = new Date(readFileSync(lockPath, 'utf8').trim()).getTime();
+    if (Date.now() - ts > MEMORY_LOCK_STALE_MS) {
+      try { unlinkSync(lockPath); } catch { /* ignore */ }
+      return false;
+    }
+    unlinkSync(lockPath); // consome o lock: ícone aparece só uma vez
+    return true;
+  } catch { return false; }
 }
 
 export function renderLine() {
@@ -51,7 +63,7 @@ export function renderLine() {
   const sessionMeta = getCurrentSessionFile();
   const sessionId = sessionMeta?.sessionId;
   const loaded = isMemoryLoaded(sessionId);
-  const loadedBox = loaded ? buildBox(' ⬡ ', GREEN, 4) : null;
+  const loadedBox = loaded ? buildBox(' ⬡  ', GREEN, 4) : null;
 
   const allEntries = readAllUsage();
 
