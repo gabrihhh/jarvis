@@ -11,7 +11,7 @@ Terminal dashboard, status bar e grafo de memória semântica para o **Claude Co
 
 ## Preview
 
-**Dashboard completo** (`jarvis-usage`):
+**Dashboard completo** (`jarvis --usage`):
 ```
 ╭──────────────────────────────────────────────────────────────╮
 │  ◈  Claude Code  ·  Usage Dashboard                          │
@@ -61,10 +61,7 @@ npm install -g @gabrihhh/jarvis
 Para integrar a status bar ao Claude Code, rode uma vez após instalar:
 
 ```bash
-jarvis-usage --setup
-```
-
-Depois **reinicie o Claude Code**.
+jarvis --setup
 ```
 
 Depois **reinicie o Claude Code** — a caixinha de contexto vai aparecer no rodapé de toda sessão.
@@ -73,58 +70,67 @@ Depois **reinicie o Claude Code** — a caixinha de contexto vai aparecer no rod
 
 ## Comandos
 
-### `jarvis-usage`
+### `jarvis`
+Mostra a versão instalada.
+
+```bash
+jarvis
+```
+
+---
+
+### `jarvis --usage`
 Abre o dashboard completo com métricas de uso mensal, semanal e diário.
 
 ```bash
-jarvis-usage
+jarvis --usage
 ```
 
 ---
 
-### `jarvis-usage --watch`
+### `jarvis --watch`
 Dashboard com **auto-refresh a cada 30 segundos**.
 
 ```bash
-jarvis-usage --watch
+jarvis --watch
 ```
 
 ---
 
-### `jarvis-usage --setup`
+### `jarvis --setup`
 Configura a **status bar** no Claude Code escrevendo `statusLine` em `~/.claude/settings.json`. Só precisa rodar uma vez.
 
 ```bash
-jarvis-usage --setup
+jarvis --setup
 ```
 
 Após rodar, **reinicie o Claude Code**.
 
 ---
 
-### `jarvis-usage graph`
+### `jarvis --graph`
 Abre o **Neo4j Browser** em `http://localhost:7474` para visualizar o grafo de memória dos seus projetos. Requer Neo4j rodando (use `/setup-memory` para configurar).
 
 ```bash
-jarvis-usage graph
+jarvis --graph
 ```
 
 ---
 
-### `jarvis-usage --line`
+### `jarvis --line`
 Gera a saída de uma linha usada internamente pela status bar. Chamado automaticamente pelo `--setup`, não é necessário rodar manualmente.
 
 ```bash
-jarvis-usage --line
+jarvis --line
 ```
 
 ---
 
-### `jarvis-usage --help`
+### `jarvis --help`
 Lista todos os comandos disponíveis.
 
 ```bash
-jarvis-usage --help
+jarvis --help
 ```
 
 ---
