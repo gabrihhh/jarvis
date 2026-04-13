@@ -1,9 +1,10 @@
 {
   "name": "@gabrihhh/claude-usage",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Beautiful terminal dashboard + status bar for Claude Code usage stats",
   "bin": {
-    "claude-usage": "bin/claude-usage.js"
+    "claude-usage": "bin/claude-usage.js",
+    "claude-memory": "bin/claude-memory.js"
   },
   "main": "./src/index.js",
   "scripts": {
@@ -24,7 +25,9 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "chalk": "^5.3.0"
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "chalk": "^5.3.0",
+    "neo4j-driver": "^6.0.1"
   },
   "type": "module",
   "engines": {
