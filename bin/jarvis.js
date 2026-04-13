@@ -21,7 +21,7 @@ function saveMemoryConfig(cfg) {
 function setHook(settings, enabled) {
   if (!settings.hooks) settings.hooks = {};
   if (enabled) {
-    settings.hooks.UserPromptSubmit = [{ type: 'command', command: 'jarvis --query' }];
+    settings.hooks.UserPromptSubmit = [{ matcher: '', hooks: [{ type: 'command', command: 'jarvis --query' }] }];
   } else {
     delete settings.hooks.UserPromptSubmit;
     if (!Object.keys(settings.hooks).length) delete settings.hooks;
