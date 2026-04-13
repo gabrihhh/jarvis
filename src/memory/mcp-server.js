@@ -65,7 +65,7 @@ const TOOLS = [
   },
   {
     name: 'save-project',
-    description: 'Salva o entendimento completo de um projeto no grafo. Use após aprovação do usuário no /memory-index.',
+    description: 'Salva o entendimento completo de um projeto no grafo. Use após aprovação do usuário no /create-memory ou /update-memory.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -138,7 +138,7 @@ async function handleListProjects() {
     language: r.get('language'),
   }));
   if (!projects.length) {
-    return 'Nenhum projeto indexado ainda. Use /memory-index para indexar um repositório.';
+    return 'Nenhum projeto indexado ainda. Use /create-memory para indexar um repositório.';
   }
   return `Projetos indexados:\n${projects.map(p =>
     `• ${p.name} [${p.branch}] — ${p.language}${p.description ? ': ' + p.description : ''}`

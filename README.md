@@ -17,17 +17,30 @@ Reinicie o Claude Code após o setup.
 
 ## Comandos
 
+**CLI:**
+
 | Comando | Descrição |
 |---|---|
 | `jarvis` | Mostra a versão |
 | `jarvis --usage` | Dashboard completo de uso (tokens, custo, contexto) |
 | `jarvis --watch` | Dashboard com auto-refresh a cada 30s |
-| `jarvis --setup` | Configura status bar e instala slash commands |
+| `jarvis --setup` | Configura status bar, instala slash commands e define trigger padrão |
 | `jarvis --graph` | Abre o Neo4j Browser em localhost:7474 |
+| `jarvis --trigger` | Mostra o modo de trigger atual |
+| `jarvis --trigger session` | Hook de memória roda uma vez por sessão *(padrão)* |
+| `jarvis --trigger prompt` | Hook de memória roda a cada prompt |
+| `jarvis --trigger off` | Desativa o carregamento automático de memória |
 | `jarvis --line` | Saída de uma linha usada internamente pela status bar |
 | `jarvis --help` | Lista todos os comandos |
-| `/setup-memory` | *(Claude Code)* Sobe Neo4j via Docker e registra o MCP server |
-| `/memory-index` | *(Claude Code)* Indexa um repositório no grafo de memória |
+
+**Slash commands** *(dentro do Claude Code)*:
+
+| Comando | Descrição |
+|---|---|
+| `/setup-memory` | Sobe Neo4j via Docker e registra o MCP server |
+| `/create-memory` | Indexa um repositório no grafo de memória (primeira vez) |
+| `/update-memory` | Atualiza o grafo com as mudanças recentes do repositório |
+| `/configure-memory` | Personaliza o schema, regras e fluxos da arquitetura de memória |
 
 ---
 

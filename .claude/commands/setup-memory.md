@@ -110,4 +110,4 @@ Informe ao usuário:
 - "Neo4j rodando em http://localhost:7474 (interface web) e bolt://localhost:7687"
 - "MCP server `jarvis-memory` registrado em ~/.claude/settings.json"
 - "**Reinicie o Claude Code** para que o MCP server seja ativado"
-- "Após reiniciar, use `/memory-index` para indexar seu primeiro repositório"
+- "Após reiniciar, use `/create-memory` para indexar seu primeiro repositório"

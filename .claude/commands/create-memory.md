@@ -1,6 +1,6 @@
 ---
-name: memory-index
-description: Indexar repositório atual no grafo de memória semantica (Neo4j)
+name: create-memory
+description: Indexar repositório no grafo de memória semântica do zero (Neo4j)
 ---
 
 # Memory Index — Indexar Repositório no Grafo de Memória

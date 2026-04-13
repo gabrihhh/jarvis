@@ -55,7 +55,9 @@ if (args.includes('--help') || args.includes('-h')) {
 
   Slash commands (inside Claude Code):
     /setup-memory                Setup Docker + Neo4j + register MCP server
-    /memory-index                Index a repository into the memory graph
+    /create-memory               Index a repository into the memory graph (first time)
+    /update-memory               Update an existing memory graph with recent changes
+    /configure-memory            Customize the memory graph architecture (schema, rules, flows)
 
   Data source: ~/.claude/projects/
 `);
@@ -88,12 +90,16 @@ if (args.includes('--graph')) {
   // Slash commands → ~/.claude/skills/<name>/SKILL.md
   const skillsDir = join(homedir(), '.claude', 'skills');
   const srcSkills = join(__dir, '../.claude/skills');
-  for (const skill of ['setup-memory', 'memory-index']) {
+  for (const skill of ['setup-memory', 'create-memory', 'update-memory', 'configure-memory']) {
     const destDir = join(skillsDir, skill);
     mkdirSync(destDir, { recursive: true });
     copyFileSync(join(srcSkills, skill, 'SKILL.md'), join(destDir, 'SKILL.md'));
     console.log(`  ✓ Slash command /${skill} installed`);
   }
+
+  // Arquitetura de memória (referenciada pelas skills)
+  copyFileSync(join(srcSkills, 'MEMORY_ARCHITECTURE.md'), join(skillsDir, 'MEMORY_ARCHITECTURE.md'));
+  console.log('  ✓ MEMORY_ARCHITECTURE.md installed');
 
   // Trigger padrão: session
   const memoryCfg = loadMemoryConfig();
