@@ -26,12 +26,12 @@ export async function queryByPath(cwd) {
   const config = loadConfig();
   const mode = config.trigger || 'session';
 
+  let lockFile = null;
   if (mode === 'session') {
     const sessionId = getCurrentSessionId();
     if (sessionId) {
-      const lockFile = join(tmpdir(), `jarvis-memory-${sessionId}.lock`);
+      lockFile = join(tmpdir(), `jarvis-memory-${sessionId}.lock`);
       if (existsSync(lockFile)) return null;
-      writeFileSync(lockFile, new Date().toISOString());
     }
   }
 
@@ -57,6 +57,8 @@ export async function queryByPath(cwd) {
   const modules = r.get('modules').map(m => m.properties);
   const concepts = [...new Set(r.get('concepts'))].filter(Boolean);
   const patterns = [...new Set(r.get('patterns'))].filter(Boolean);
+
+  if (lockFile) writeFileSync(lockFile, new Date().toISOString());
 
   return [
     `## Contexto do Repositório (jarvis-memory)`,

@@ -24,11 +24,11 @@ function readTriggerMode() {
   } catch { return 'off'; }
 }
 
-function buildBox(inner, color) {
+function buildBox(inner, color, width = inner.length) {
   return [
-    chalk.hex(color).bold(`╭${'─'.repeat(inner.length)}╮`),
+    chalk.hex(color).bold(`╭${'─'.repeat(width)}╮`),
     chalk.hex(color).bold(`│${inner}│`),
-    chalk.hex(color).bold(`╰${'─'.repeat(inner.length)}╯`),
+    chalk.hex(color).bold(`╰${'─'.repeat(width)}╯`),
   ];
 }
 
@@ -51,7 +51,7 @@ export function renderLine() {
   const sessionMeta = getCurrentSessionFile();
   const sessionId = sessionMeta?.sessionId;
   const loaded = isMemoryLoaded(sessionId);
-  const loadedBox = loaded ? buildBox(' ⬡ ', GREEN) : null;
+  const loadedBox = loaded ? buildBox(' ⬡ ', GREEN, 4) : null;
 
   const allEntries = readAllUsage();
 
