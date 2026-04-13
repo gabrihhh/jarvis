@@ -11,7 +11,7 @@ Terminal dashboard, status bar e grafo de memória semântica para o **Claude Co
 
 ## Preview
 
-**Dashboard completo** (`jarvis`):
+**Dashboard completo** (`jarvis-usage`):
 ```
 ╭──────────────────────────────────────────────────────────────╮
 │  ◈  Claude Code  ·  Usage Dashboard                          │
@@ -61,7 +61,10 @@ npm install -g @gabrihhh/jarvis
 Para integrar a status bar ao Claude Code, rode uma vez após instalar:
 
 ```bash
-jarvis --setup
+jarvis-usage --setup
+```
+
+Depois **reinicie o Claude Code**.
 ```
 
 Depois **reinicie o Claude Code** — a caixinha de contexto vai aparecer no rodapé de toda sessão.
@@ -70,58 +73,58 @@ Depois **reinicie o Claude Code** — a caixinha de contexto vai aparecer no rod
 
 ## Comandos
 
-### `jarvis`
+### `jarvis-usage`
 Abre o dashboard completo com métricas de uso mensal, semanal e diário.
 
 ```bash
-jarvis
+jarvis-usage
 ```
 
 ---
 
-### `jarvis --watch`
+### `jarvis-usage --watch`
 Dashboard com **auto-refresh a cada 30 segundos**.
 
 ```bash
-jarvis --watch
+jarvis-usage --watch
 ```
 
 ---
 
-### `jarvis --setup`
+### `jarvis-usage --setup`
 Configura a **status bar** no Claude Code escrevendo `statusLine` em `~/.claude/settings.json`. Só precisa rodar uma vez.
 
 ```bash
-jarvis --setup
+jarvis-usage --setup
 ```
 
 Após rodar, **reinicie o Claude Code**.
 
 ---
 
-### `jarvis graph`
+### `jarvis-usage graph`
 Abre o **Neo4j Browser** em `http://localhost:7474` para visualizar o grafo de memória dos seus projetos. Requer Neo4j rodando (use `/setup-memory` para configurar).
 
 ```bash
-jarvis graph
+jarvis-usage graph
 ```
 
 ---
 
-### `jarvis --line`
+### `jarvis-usage --line`
 Gera a saída de uma linha usada internamente pela status bar. Chamado automaticamente pelo `--setup`, não é necessário rodar manualmente.
 
 ```bash
-jarvis --line
+jarvis-usage --line
 ```
 
 ---
 
-### `jarvis --help`
+### `jarvis-usage --help`
 Lista todos os comandos disponíveis.
 
 ```bash
-jarvis --help
+jarvis-usage --help
 ```
 
 ---

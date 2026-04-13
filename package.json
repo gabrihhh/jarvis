@@ -3,7 +3,7 @@
   "version": "2.0.0",
   "description": "Claude Code terminal dashboard + semantic memory graph via Neo4j",
   "bin": {
-    "jarvis": "bin/jarvis.js",
+    "jarvis-usage": "bin/jarvis-usage.js",
     "jarvis-memory": "bin/jarvis-memory.js"
   },
   "main": "./src/index.js",

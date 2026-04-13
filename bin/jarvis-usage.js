@@ -10,15 +10,15 @@ const args = process.argv.slice(2);
 
 if (args.includes('--help') || args.includes('-h')) {
   console.log(`
-  jarvis  —  Claude Code terminal dashboard + semantic memory graph
+  jarvis-usage  —  Claude Code terminal dashboard + semantic memory graph
 
   Usage:
-    jarvis               Show full usage dashboard
-    jarvis --line        Single-line status (for Claude Code status bar)
-    jarvis --setup       Install status bar into ~/.claude/settings.json
-    jarvis --watch       Refresh dashboard every 30s
-    jarvis graph         Open Neo4j browser at http://localhost:7474
-    jarvis --help        Show this help
+    jarvis-usage               Show full usage dashboard
+    jarvis-usage --line        Single-line status (for Claude Code status bar)
+    jarvis-usage --setup       Install status bar into ~/.claude/settings.json
+    jarvis-usage --watch       Refresh dashboard every 30s
+    jarvis-usage graph         Open Neo4j browser at http://localhost:7474
+    jarvis-usage --help        Show this help
 
   Slash commands (inside Claude Code):
     /setup-memory        Setup Docker + Neo4j + register MCP server
@@ -45,7 +45,7 @@ if (args[0] === 'graph') {
   if (existsSync(settingsPath)) {
     try { settings = JSON.parse(readFileSync(settingsPath, 'utf-8')); } catch { /* keep empty */ }
   }
-  settings.statusLine = { type: 'command', command: 'jarvis --line' };
+  settings.statusLine = { type: 'command', command: 'jarvis-usage --line' };
   writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
   console.log('  Status bar configured. Restart Claude to activate.\n');
 } else if (args.includes('--line') || args.includes('-l')) {
