@@ -1,10 +1,10 @@
 {
-  "name": "@gabrihhh/claude-usage",
-  "version": "1.0.1",
-  "description": "Beautiful terminal dashboard + status bar for Claude Code usage stats",
+  "name": "@gabrihhh/jarvis",
+  "version": "2.0.0",
+  "description": "Claude Code terminal dashboard + semantic memory graph via Neo4j",
   "bin": {
-    "claude-usage": "bin/claude-usage.js",
-    "claude-memory": "bin/claude-memory.js"
+    "jarvis": "bin/jarvis.js",
+    "jarvis-memory": "bin/jarvis-memory.js"
   },
   "main": "./src/index.js",
   "scripts": {
@@ -21,7 +21,10 @@
     "usage",
     "stats",
     "cli",
-    "status-bar"
+    "status-bar",
+    "neo4j",
+    "memory-graph",
+    "mcp"
   ],
   "license": "MIT",
   "dependencies": {

@@ -76,9 +76,9 @@ Se não ficar pronto após 60 segundos: pergunte ao usuário o que fazer.
 
 ## Passo 4 — Registrar MCP Server
 
-Descubra o caminho absoluto do bin `claude-memory`:
+Descubra o caminho absoluto do bin `jarvis-memory`:
 ```bash
-which claude-memory 2>/dev/null || realpath bin/claude-memory.js
+which jarvis-memory 2>/dev/null || realpath bin/jarvis-memory.js
 ```
 
 Leia o arquivo `~/.claude/settings.json`. Se não existir, trate como `{}`.
@@ -87,7 +87,7 @@ Adicione ou atualize a chave `mcpServers.claude-memory` preservando todas as out
 ```json
 {
   "mcpServers": {
-    "claude-memory": {
+    "jarvis-memory": {
       "command": "node",
       "args": ["<CAMINHO_ABSOLUTO_DO_BIN>"]
     }
@@ -103,6 +103,6 @@ Salve o arquivo `~/.claude/settings.json`.
 
 Informe ao usuário:
 - "Neo4j rodando em http://localhost:7474 (interface web) e bolt://localhost:7687"
-- "MCP server `claude-memory` registrado em ~/.claude/settings.json"
+- "MCP server `jarvis-memory` registrado em ~/.claude/settings.json"
 - "**Reinicie o Claude Code** para que o MCP server seja ativado"
 - "Após reiniciar, use `/memory-index` para indexar seu primeiro repositório"
