@@ -5,6 +5,7 @@ import {
   ListToolsRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 import { runQuery, runWriteQuery, closeDriver } from './neo4j-client.js';
+import { queryByPath } from './query-by-path.js';
 
 // ── Tool definitions ──────────────────────────────────────────────────────────
 
@@ -24,6 +25,17 @@ const TOOLS = [
         branch: { type: 'string', description: 'Branch (main ou qa)', enum: ['main', 'qa'] },
       },
       required: ['name', 'branch'],
+    },
+  },
+  {
+    name: 'query-by-path',
+    description: 'Retorna o projeto indexado cujo path corresponde ao diretório informado. Use no início de cada sessão passando o cwd.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        path: { type: 'string', description: 'Path absoluto do diretório atual (cwd)' },
+      },
+      required: ['path'],
     },
   },
   {
@@ -355,6 +367,7 @@ export async function startServer() {
       switch (name) {
         case 'list-projects':     text = await handleListProjects(); break;
         case 'query-project':     text = await handleQueryProject(args); break;
+        case 'query-by-path':     { const r = await queryByPath(args.path); text = r ?? `Nenhum projeto indexado encontrado para: ${args.path}`; break; }
         case 'search-concept':    text = await handleSearchConcept(args); break;
         case 'get-module-detail': text = await handleGetModuleDetail(args); break;
         case 'save-project':      text = await handleSaveProject(args); break;
