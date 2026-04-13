@@ -1,3 +1,8 @@
+---
+name: setup-memory
+description: Configurar ambiente Neo4j + MCP Server para memória semântica do Claude Code
+---
+
 # Setup Memory — Preparar ambiente Neo4j e MCP Server
 
 Você vai configurar o ambiente de memória semântica para o Claude Code. Siga este fluxo exato, passo a passo.

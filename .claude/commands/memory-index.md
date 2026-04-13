@@ -1,3 +1,8 @@
+---
+name: memory-index
+description: Indexar repositório atual no grafo de memória semantica (Neo4j)
+---
+
 # Memory Index — Indexar Repositório no Grafo de Memória
 
 Você vai analisar o repositório atual de forma exaustiva e indexar seu entendimento no Neo4j. **Não grave nada sem aprovação explícita do usuário.**
