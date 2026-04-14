@@ -9,6 +9,21 @@ Você vai analisar o repositório atual de forma exaustiva e indexar seu entendi
 
 **Antes de iniciar:** leia `.claude/skills/MEMORY_ARCHITECTURE.md` — ele define o schema do grafo, as regras de indexação e os critérios de qualidade que você deve seguir durante toda a execução desta skill.
 
+## PRÉ-REQUISITO — Verificar ambiente
+
+Antes de qualquer passo, chame a MCP tool:
+```
+list-projects()
+```
+
+Se a tool retornar erro de conexão, tool não encontrada ou MCP indisponível:
+**"O MCP server `jarvis-memory` não está acessível. Execute `/setup-memory` primeiro e reinicie o Claude Code antes de continuar."**
+Interrompa aqui — não prossiga.
+
+Se a tool responder (mesmo que com "Nenhum projeto indexado"), o ambiente está pronto. Continue.
+
+---
+
 ## REGRA GLOBAL
 
 - Se travar em qualquer ponto — dúvida técnica, conceitual, arquivo ilegível, ambiguidade de qualquer natureza — **pare e pergunte ao usuário** antes de continuar

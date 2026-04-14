@@ -4,10 +4,35 @@ import { renderLine } from '../src/statusline.js';
 import { readFileSync, writeFileSync, existsSync, mkdirSync, copyFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { homedir } from 'os';
-import { exec } from 'child_process';
+import { exec, execSync } from 'child_process';
 import { fileURLToPath } from 'url';
 
 const MEMORY_CONFIG_PATH = join(homedir(), '.claude-memory.json');
+
+function checkSetupDone() {
+  const settingsPath = join(homedir(), '.claude', 'settings.json');
+  if (!existsSync(settingsPath)) return false;
+  try {
+    const s = JSON.parse(readFileSync(settingsPath, 'utf-8'));
+    return !!(s?.statusLine);
+  } catch { return false; }
+}
+
+function checkMcpRegistered() {
+  const settingsPath = join(homedir(), '.claude', 'settings.json');
+  if (!existsSync(settingsPath)) return false;
+  try {
+    const s = JSON.parse(readFileSync(settingsPath, 'utf-8'));
+    return !!(s?.mcpServers?.['jarvis-memory']);
+  } catch { return false; }
+}
+
+function checkNeo4jRunning() {
+  try {
+    const out = execSync('docker ps --filter name=claude-memory --filter status=running --format "{{.Names}}"', { stdio: 'pipe' }).toString().trim();
+    return out.includes('claude-memory');
+  } catch { return false; }
+}
 
 function loadMemoryConfig() {
   try { return JSON.parse(readFileSync(MEMORY_CONFIG_PATH, 'utf-8')); }
@@ -65,6 +90,11 @@ if (args.includes('--help') || args.includes('-h')) {
 }
 
 if (args.includes('--graph')) {
+  if (!checkNeo4jRunning()) {
+    console.error('\n  ✗ Neo4j não está rodando.');
+    console.error('  Execute /setup-memory dentro do Claude Code para iniciar o container.\n');
+    process.exit(1);
+  }
   const url = 'http://localhost:7474';
   const opener =
     process.platform === 'darwin' ? 'open' :
@@ -122,6 +152,24 @@ if (args.includes('--graph')) {
     console.log(`\n  Trigger mode: ${current}\n`);
     console.log(`  Usage: jarvis --trigger <session|prompt|off>\n`);
     process.exit(0);
+  }
+
+  if (mode !== 'off') {
+    if (!checkSetupDone()) {
+      console.error('\n  ✗ jarvis --setup não foi executado.');
+      console.error('  Execute primeiro: jarvis --setup\n');
+      process.exit(1);
+    }
+    if (!checkMcpRegistered()) {
+      console.error('\n  ✗ MCP server jarvis-memory não está registrado.');
+      console.error('  Execute /setup-memory dentro do Claude Code e reinicie antes de ativar o trigger.\n');
+      process.exit(1);
+    }
+    if (!checkNeo4jRunning()) {
+      console.error('\n  ✗ Neo4j não está rodando.');
+      console.error('  Execute /setup-memory dentro do Claude Code para iniciar o container.\n');
+      process.exit(1);
+    }
   }
 
   const cfg = loadMemoryConfig();
