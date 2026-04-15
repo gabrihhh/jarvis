@@ -30,6 +30,10 @@ Reinicie o Claude Code após o setup.
 | `jarvis --trigger session` | Hook de memória roda uma vez por sessão *(padrão)* |
 | `jarvis --trigger prompt` | Hook de memória roda a cada prompt |
 | `jarvis --trigger off` | Desativa o carregamento automático de memória |
+| `jarvis --theme` | Mostra o tema atual da status bar |
+| `jarvis --theme <name>:<#hex>` | Define a cor de um box (`context`, `trigger`, `memory`) |
+| `jarvis --theme <name>:reset` | Reseta a cor de um box para o padrão |
+| `jarvis --theme reset` | Reseta todas as cores para o padrão |
 | `jarvis --line` | Saída de uma linha usada internamente pela status bar |
 | `jarvis --help` | Lista todos os comandos |
 

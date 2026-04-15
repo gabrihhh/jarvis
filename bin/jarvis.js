@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { run } from '../src/index.js';
 import { renderLine } from '../src/statusline.js';
+import { readTheme, writeTheme, isValidHex, DEFAULT_COLORS, VALID_NAMES, THEME_PATH } from '../src/theme.js';
 import { readFileSync, writeFileSync, existsSync, mkdirSync, copyFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { homedir } from 'os';
@@ -76,6 +77,10 @@ if (args.includes('--help') || args.includes('-h')) {
     jarvis --trigger session     Hook runs once per session (default)
     jarvis --trigger prompt      Hook runs on every prompt
     jarvis --trigger off         Disable automatic memory loading
+    jarvis --theme               Show current statusline theme
+    jarvis --theme <name>:<hex>  Set a box color (context, trigger, memory)
+    jarvis --theme <name>:reset  Reset a single box to default color
+    jarvis --theme reset         Reset all colors to default
     jarvis --help                Show this help
 
   Slash commands (inside Claude Code):
@@ -189,6 +194,65 @@ if (args.includes('--graph')) {
   if (mode !== 'off') console.log(`  Hook configured in ~/.claude/settings.json`);
   else console.log(`  Hook removed from ~/.claude/settings.json`);
   console.log(`\n  Restart Claude Code to activate.\n`);
+} else if (args.includes('--theme')) {
+  const { Chalk } = await import('chalk');
+  const chalk = new Chalk({ level: 3 });
+  const value = args[args.indexOf('--theme') + 1];
+
+  // jarvis --theme  →  mostra tema atual
+  if (!value || value.startsWith('--')) {
+    const theme = readTheme();
+    console.log('\n  Current theme:\n');
+    for (const name of VALID_NAMES) {
+      const hex = theme[name];
+      const isDefault = hex === DEFAULT_COLORS[name];
+      const tag = isDefault ? chalk.dim('  (default)') : '';
+      console.log(`    ${chalk.bold(name.padEnd(8))}  ${chalk.hex(hex).bold('██')}  ${hex}${tag}`);
+    }
+    console.log(`\n  Config: ${THEME_PATH}\n`);
+    process.exit(0);
+  }
+
+  // jarvis --theme reset  →  reseta tudo
+  if (value === 'reset') {
+    writeTheme({ ...DEFAULT_COLORS });
+    console.log('\n  ✓ Theme reset to defaults\n');
+    process.exit(0);
+  }
+
+  // jarvis --theme name:value
+  const sep = value.indexOf(':');
+  if (sep === -1) {
+    console.error(`\n  ✗ Invalid format. Use: jarvis --theme <context|trigger|memory>:<#hexcolor|reset>\n`);
+    process.exit(1);
+  }
+
+  const name = value.slice(0, sep);
+  const color = value.slice(sep + 1);
+
+  if (!VALID_NAMES.includes(name)) {
+    console.error(`\n  ✗ Unknown name "${name}". Valid names: ${VALID_NAMES.join(', ')}\n`);
+    process.exit(1);
+  }
+
+  const theme = readTheme();
+
+  if (color === 'reset') {
+    theme[name] = DEFAULT_COLORS[name];
+    writeTheme(theme);
+    console.log(`\n  ✓ ${name} reset to default (${DEFAULT_COLORS[name]})\n`);
+    process.exit(0);
+  }
+
+  if (!isValidHex(color)) {
+    console.error(`\n  ✗ Invalid hex color "${color}". Use format: #rgb or #rrggbb\n`);
+    process.exit(1);
+  }
+
+  theme[name] = color;
+  writeTheme(theme);
+  console.log(`\n  ✓ ${name} set to ${chalk.hex(color).bold(color)}\n`);
+  process.exit(0);
 } else if (args.includes('--query')) {
   try {
     const { queryByPath } = await import('../src/memory/query-by-path.js');

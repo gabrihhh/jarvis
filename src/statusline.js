@@ -4,12 +4,9 @@ import { join } from 'path';
 import { homedir, tmpdir } from 'os';
 import { readAllUsage, getCurrentSessionFile, readCurrentSessionUsage } from './reader.js';
 import { aggregateStats, aggregateSession } from './calculator.js';
+import { readTheme } from './theme.js';
 
 const chalk = new Chalk({ level: 3 });
-
-const PINK = '#f472b6';
-const CYAN = '#22d3ee';
-const GREEN = '#4ade80';
 
 function bar(percent, width = 8) {
   const filled = Math.round((percent / 100) * width);
@@ -57,23 +54,24 @@ function isMemoryLoaded(sessionId) {
 
 export function renderLine() {
   const mode = readTriggerMode();
+  const theme = readTheme();
 
   const sessionMeta = getCurrentSessionFile();
   const sessionId = sessionMeta?.sessionId;
   const loaded = isMemoryLoaded(sessionId);
-  const loadedBox = loaded ? buildBox(' ⬡  ', GREEN, 4) : null;
+  const loadedBox = loaded ? buildBox(' ⬡  ', theme.memory, 4) : null;
 
   const allEntries = readAllUsage();
 
   const boxes = (contextBox) => {
     const toJoin = [contextBox];
-    if (mode !== 'off') toJoin.push(buildBox(` TRIGGER ${mode.toUpperCase()} `, PINK));
+    if (mode !== 'off') toJoin.push(buildBox(` TRIGGER ${mode.toUpperCase()} `, theme.trigger));
     if (loadedBox) toJoin.push(loadedBox);
     return joinBoxes(...toJoin);
   };
 
   if (!allEntries.length) {
-    const contextBox = buildBox(` CONTEXT ${'░'.repeat(8)} 0% `, CYAN);
+    const contextBox = buildBox(` CONTEXT ${'░'.repeat(8)} 0% `, theme.context);
     process.stdout.write(boxes(contextBox));
     return;
   }
@@ -82,11 +80,11 @@ export function renderLine() {
   const session = aggregateSession(sessionEntries);
 
   if (!session) {
-    const contextBox = buildBox(` CONTEXT ${'░'.repeat(8)} 0% `, CYAN);
+    const contextBox = buildBox(` CONTEXT ${'░'.repeat(8)} 0% `, theme.context);
     process.stdout.write(boxes(contextBox));
     return;
   }
 
-  const contextBox = buildBox(` CONTEXT ${bar(session.percent)} ${session.percent}% `, CYAN);
+  const contextBox = buildBox(` CONTEXT ${bar(session.percent)} ${session.percent}% `, theme.context);
   process.stdout.write(boxes(contextBox));
 }

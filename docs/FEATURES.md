@@ -71,20 +71,6 @@ Exibir na status bar a quantidade de tokens consumidos no último turno (da últ
 
 ---
 
-## [IDEA] Statusline themes
-
-Paleta de cores configurável para os boxes da status bar.
-
-**Motivação:** o visual atual é fixo; usuários com terminais claros ou preferências diferentes não conseguem customizar.
-
-**Como pode funcionar:**
-- `jarvis --theme <nome>` — aplica um tema salvo em `~/.claude/jarvis-theme.json`
-- Temas built-in: `default` (atual), `minimal`, `nord`, `solarized`
-- Configura cores de borda, fill da barra de progresso e ícones via JSON
-- `jarvis --theme custom` abre um wizard interativo para criar o próprio tema
-
----
-
 ## [IDEA] update-memory baseado em commits do GitHub
 
 Reformular o fluxo de `/create-memory` e `/update-memory` para usar o histórico de commits como âncora de atualização incremental do grafo.
