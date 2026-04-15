@@ -135,29 +135,7 @@ export function getCurrentSessionFile() {
       pid = getParentPid(pid);
     }
 
-    // Fallback: find a session whose sessionId appears in JSONL files
-    const sessionFiles = readdirSync(sessionsDir)
-      .map(f => {
-        try { return JSON.parse(readFileSync(join(sessionsDir, f), 'utf-8')); }
-        catch { return null; }
-      })
-      .filter(Boolean);
-
-    if (!sessionFiles.length) return null;
-
-    const allFiles = getAllSessionFiles();
-    const sessionIdSet = new Set();
-    for (const file of allFiles) {
-      try {
-        const lines = readFileSync(file, 'utf-8').split('\n').filter(l => l.trim());
-        for (const line of lines.slice(-5)) {
-          try { const obj = JSON.parse(line); if (obj.sessionId) sessionIdSet.add(obj.sessionId); }
-          catch { /* skip */ }
-        }
-      } catch { /* skip */ }
-    }
-
-    return sessionFiles.find(s => sessionIdSet.has(s.sessionId)) || sessionFiles[0];
+    return null;
   } catch {
     return null;
   }
