@@ -31,9 +31,13 @@ Reinicie o Claude Code após o setup.
 | `jarvis --trigger prompt` | Hook de memória roda a cada prompt |
 | `jarvis --trigger off` | Desativa o carregamento automático de memória |
 | `jarvis --theme` | Mostra o tema atual da status bar |
-| `jarvis --theme <name>:<#hex>` | Define a cor de um box (`context`, `trigger`, `memory`) |
+| `jarvis --theme <name>:<#hex>` | Define a cor de um box (`context`, `trigger`, `memory`, `tokens`) |
 | `jarvis --theme <name>:reset` | Reseta a cor de um box para o padrão |
 | `jarvis --theme reset` | Reseta todas as cores para o padrão |
+| `jarvis --token` | Mostra o modo de exibição de tokens atual |
+| `jarvis --token on` | Ativa box com total de tokens do último turno (`◈`) |
+| `jarvis --token complete` | Ativa box `◈` + linha de breakdown abaixo da status bar |
+| `jarvis --token off` | Desativa exibição de tokens |
 | `jarvis --line` | Saída de uma linha usada internamente pela status bar |
 | `jarvis --help` | Lista todos os comandos |
 
@@ -78,4 +82,19 @@ Reinicie o Claude Code após o setup.
 ╭──────────────────────╮
 │ CONTEXT ████░░░░ 52% │
 ╰──────────────────────╯
+```
+
+**Status bar com `--token on`** (box com total de tokens do último turno):
+```
+╭──────────────────────╮╭──────────╮
+│ CONTEXT ████░░░░ 52% ││ ◈ 50.0K  │
+╰──────────────────────╯╰──────────╯
+```
+
+**Status bar com `--token complete`** (box + breakdown detalhado):
+```
+╭──────────────────────╮╭──────────╮
+│ CONTEXT ████░░░░ 52% ││ ◈ 50.0K  │
+╰──────────────────────╯╰──────────╯
+INPUT 800 │ HISTORY 45.0K │ CACHE 1.2K │ RESPONSE 3.2K
 ```

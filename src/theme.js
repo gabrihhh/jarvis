@@ -8,6 +8,7 @@ export const DEFAULT_COLORS = {
   context: '#22d3ee',
   trigger: '#f472b6',
   memory:  '#4ade80',
+  tokens:  '#ef4444',
 };
 
 export const VALID_NAMES = Object.keys(DEFAULT_COLORS);

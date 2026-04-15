@@ -78,9 +78,13 @@ if (args.includes('--help') || args.includes('-h')) {
     jarvis --trigger prompt      Hook runs on every prompt
     jarvis --trigger off         Disable automatic memory loading
     jarvis --theme               Show current statusline theme
-    jarvis --theme <name>:<hex>  Set a box color (context, trigger, memory)
+    jarvis --theme <name>:<hex>  Set a box color (context, trigger, memory, tokens)
     jarvis --theme <name>:reset  Reset a single box to default color
     jarvis --theme reset         Reset all colors to default
+    jarvis --token               Show current token display mode
+    jarvis --token on            Show total tokens box (◈)
+    jarvis --token complete      Show token box + INPUT/HISTORY/CACHE/RESPONSE breakdown
+    jarvis --token off           Disable token display
     jarvis --help                Show this help
 
   Slash commands (inside Claude Code):
@@ -252,6 +256,25 @@ if (args.includes('--graph')) {
   theme[name] = color;
   writeTheme(theme);
   console.log(`\n  ✓ ${name} set to ${chalk.hex(color).bold(color)}\n`);
+  process.exit(0);
+} else if (args.includes('--token')) {
+  const value = args[args.indexOf('--token') + 1];
+  const validValues = ['on', 'off', 'complete'];
+
+  if (!value || !validValues.includes(value)) {
+    const cfg = loadMemoryConfig();
+    const current = cfg.tokenDisplay || 'off';
+    console.log(`\n  Token display: ${current}\n`);
+    console.log(`  Usage: jarvis --token <on|complete|off>\n`);
+    process.exit(0);
+  }
+
+  const cfg = loadMemoryConfig();
+  cfg.tokenDisplay = value === 'on' ? 'simple' : value;
+  saveMemoryConfig(cfg);
+
+  const labels = { simple: 'on (◈ total tokens)', off: 'off', complete: 'complete (breakdown)' };
+  console.log(`\n  ✓ Token display set to: ${labels[cfg.tokenDisplay]}\n`);
   process.exit(0);
 } else if (args.includes('--query')) {
   try {

@@ -109,6 +109,18 @@ export function formatTokens(n) {
   return `${n}`;
 }
 
+export function getLastTurnTokens(entries) {
+  if (!entries.length) return null;
+  const last = entries[entries.length - 1];
+  return {
+    input:    last.inputTokens,
+    history:  last.cacheReadTokens,
+    cache:    last.cacheWriteTokens,
+    response: last.outputTokens,
+    total:    last.inputTokens + last.outputTokens + last.cacheReadTokens + last.cacheWriteTokens,
+  };
+}
+
 export function formatCost(n) {
   if (n >= 1) return `$${n.toFixed(2)}`;
   if (n >= 0.01) return `$${n.toFixed(3)}`;

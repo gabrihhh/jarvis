@@ -3,7 +3,7 @@ import { readFileSync, existsSync, unlinkSync } from 'fs';
 import { join } from 'path';
 import { homedir, tmpdir } from 'os';
 import { readAllUsage, getCurrentSessionFile, readCurrentSessionUsage } from './reader.js';
-import { aggregateStats, aggregateSession } from './calculator.js';
+import { aggregateStats, aggregateSession, getLastTurnTokens, formatTokens } from './calculator.js';
 import { readTheme } from './theme.js';
 
 const chalk = new Chalk({ level: 3 });
@@ -18,6 +18,13 @@ function readTriggerMode() {
   try {
     const cfg = JSON.parse(readFileSync(join(homedir(), '.claude-memory.json'), 'utf8'));
     return cfg.trigger || 'session';
+  } catch { return 'off'; }
+}
+
+function readTokenMode() {
+  try {
+    const cfg = JSON.parse(readFileSync(join(homedir(), '.claude-memory.json'), 'utf8'));
+    return cfg.tokenDisplay || 'off';
   } catch { return 'off'; }
 }
 
@@ -54,6 +61,7 @@ function isMemoryLoaded(sessionId) {
 
 export function renderLine() {
   const mode = readTriggerMode();
+  const tokenMode = readTokenMode();
   const theme = readTheme();
 
   const sessionMeta = getCurrentSessionFile();
@@ -63,28 +71,44 @@ export function renderLine() {
 
   const allEntries = readAllUsage();
 
-  const boxes = (contextBox) => {
+  const buildOutput = (contextBox, turnTokens) => {
     const toJoin = [contextBox];
     if (mode !== 'off') toJoin.push(buildBox(` TRIGGER ${mode.toUpperCase()} `, theme.trigger));
     if (loadedBox) toJoin.push(loadedBox);
-    return joinBoxes(...toJoin);
+    if (turnTokens) toJoin.push(buildBox(` ◈ ${formatTokens(turnTokens.total)} `, theme.tokens));
+
+    let out = joinBoxes(...toJoin);
+
+    if (tokenMode === 'complete' && turnTokens) {
+      const col = (s) => chalk.hex(theme.tokens).bold(s);
+      const parts = [
+        `INPUT ${formatTokens(turnTokens.input)}`,
+        `HISTORY ${formatTokens(turnTokens.history)}`,
+        `CACHE ${formatTokens(turnTokens.cache)}`,
+        `RESPONSE ${formatTokens(turnTokens.response)}`,
+      ];
+      out += '\n' + parts.map(col).join(col(' │ '));
+    }
+
+    return out;
   };
 
   if (!allEntries.length) {
     const contextBox = buildBox(` CONTEXT ${'░'.repeat(8)} 0% `, theme.context);
-    process.stdout.write(boxes(contextBox));
+    process.stdout.write(buildOutput(contextBox, null));
     return;
   }
 
   const sessionEntries = sessionId ? readCurrentSessionUsage(sessionId) : [];
   const session = aggregateSession(sessionEntries);
+  const turnTokens = tokenMode !== 'off' ? getLastTurnTokens(sessionEntries) : null;
 
   if (!session) {
     const contextBox = buildBox(` CONTEXT ${'░'.repeat(8)} 0% `, theme.context);
-    process.stdout.write(boxes(contextBox));
+    process.stdout.write(buildOutput(contextBox, turnTokens));
     return;
   }
 
   const contextBox = buildBox(` CONTEXT ${bar(session.percent)} ${session.percent}% `, theme.context);
-  process.stdout.write(boxes(contextBox));
+  process.stdout.write(buildOutput(contextBox, turnTokens));
 }
