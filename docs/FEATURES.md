@@ -184,6 +184,19 @@ Pergunta apenas o que é específico daquele contexto (vocabulário do domínio,
 
 ---
 
+## [BUG] Statusline: context window por terminal (não global)
+
+O context window exibido na status bar é lido de um estado global compartilhado entre todos os terminais abertos. Isso faz com que múltiplos terminais com sessões Claude diferentes exibam o mesmo valor de context window — o que é incorreto.
+
+**Problema:** o valor de `contextWindow` deve ser isolado por sessão/terminal. Hoje, o último terminal que escreveu o estado sobrescreve o valor lido por todos os outros.
+
+**Correção proposta:**
+- O context window deve ser lido diretamente do JSONL da sessão corrente (identificada pelo `sessionId` do terminal atual), e não de um cache global
+- Cada instância da statusline deve usar apenas os dados do seu próprio `sessionId` para calcular e exibir o context window
+- Remover o campo de **Context Window** da saída do `jarvis --usage` — essa informação pertence à statusline em tempo real, não ao relatório de uso agregado
+
+---
+
 ## [IDEA] Grafo multi-camada: persona como categoria raiz
 
 Evoluir o modelo do grafo para suportar **múltiplas categorias de persona ativas ao mesmo tempo**, onde cada categoria é uma camada independente de schema que coexiste no mesmo grafo — permitindo que um tech lead que também desenvolve faça perguntas de engenharia e de liderança a partir do mesmo contexto.

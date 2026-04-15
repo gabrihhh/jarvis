@@ -60,29 +60,13 @@ function tokenRow(label, stats, maxTokens) {
   return row(text);
 }
 
-// ─── Context window row ──────────────────────────────────────
-function contextRow(session) {
-  if (!session) {
-    return row(`  ${chalk.hex(DIM)('No active session detected')}`);
-  }
-  const { contextUsed, contextWindow, percent, model, turns } = session;
-  const b    = bar(percent, 24);
-  const pct  = chalk.bold.hex(WHITE)(`${percent}%`);
-  const info = chalk.hex(WHITE)(`${formatTokens(contextUsed)} / ${formatTokens(contextWindow)}`);
-  const meta = chalk.hex(DIM)(`${turns} turn${turns !== 1 ? 's' : ''}  ·  model: ${model.replace('claude-', '')}`);
-  return [
-    row(`  ${b}  ${pct}  ${info}`),
-    row(`  ${meta}`),
-  ].join('\n');
-}
-
 // ─── Section header ──────────────────────────────────────────
 function sectionHeader(icon, label) {
   return row(`  ${chalk.hex(WHITE)(icon)}  ${chalk.bold.hex(WHITE)(label)}`);
 }
 
 // ─── Full render ─────────────────────────────────────────────
-export function render(stats, session) {
+export function render(stats) {
   const { monthly, weekly, daily } = stats;
   const maxTokens = monthly.total || 1;
 
@@ -105,12 +89,6 @@ export function render(stats, session) {
     tokenRow(chalk.hex('#c084fc').bold(pad('Monthly', 8)), monthly, maxTokens),
     tokenRow(chalk.hex('#60a5fa').bold(pad('Weekly ', 8)), weekly,  maxTokens),
     tokenRow(chalk.hex('#34d399').bold(pad('Today  ', 8)), daily,   maxTokens),
-    row(''),
-    DIV,
-    row(''),
-    sectionHeader('⬡', 'Context Window  (current session)'),
-    row(''),
-    contextRow(session),
     row(''),
     DIV,
     row(''),

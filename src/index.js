@@ -1,5 +1,5 @@
-import { readAllUsage, getCurrentSessionFile, readCurrentSessionUsage } from './reader.js';
-import { aggregateStats, aggregateSession } from './calculator.js';
+import { readAllUsage } from './reader.js';
+import { aggregateStats } from './calculator.js';
 import { render, renderError, renderLoading } from './display.js';
 
 export async function run() {
@@ -15,12 +15,6 @@ export async function run() {
 
   const stats = aggregateStats(allEntries);
 
-  // current session
-  const sessionMeta = getCurrentSessionFile();
-  const sessionId   = sessionMeta?.sessionId;
-  const sessionEntries = sessionId ? readCurrentSessionUsage(sessionId) : [];
-  const session = aggregateSession(sessionEntries);
-
   process.stdout.write('\r' + ' '.repeat(40) + '\r');
-  console.log('\n' + render(stats, session) + '\n');
+  console.log('\n' + render(stats) + '\n');
 }

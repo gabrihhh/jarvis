@@ -3,6 +3,34 @@ import { join } from 'path';
 import { homedir } from 'os';
 import { execSync } from 'child_process';
 
+function getParentPid(pid) {
+  // Linux — leitura direta do /proc, sem subprocess
+  try {
+    const stat = readFileSync(`/proc/${pid}/stat`, 'utf8');
+    const match = stat.match(/^\d+ \(.*?\) \S+ (\d+)/);
+    if (match) return parseInt(match[1]);
+  } catch { /* não é Linux ou /proc indisponível */ }
+
+  // macOS / Linux fallback
+  if (process.platform !== 'win32') {
+    try {
+      const out = execSync(`ps -o ppid= -p ${pid}`, { stdio: 'pipe' }).toString().trim();
+      const n = parseInt(out);
+      return isNaN(n) ? null : n;
+    } catch { return null; }
+  }
+
+  // Windows — PowerShell com Get-CimInstance (não deprecated, Windows 7+)
+  try {
+    const out = execSync(
+      `powershell -NoProfile -Command "(Get-CimInstance Win32_Process -Filter 'ProcessId=${pid}').ParentProcessId"`,
+      { stdio: 'pipe' }
+    ).toString().trim();
+    const n = parseInt(out);
+    return isNaN(n) ? null : n;
+  } catch { return null; }
+}
+
 const CLAUDE_DIR = join(homedir(), '.claude');
 const PROJECTS_DIR = join(CLAUDE_DIR, 'projects');
 
@@ -95,24 +123,16 @@ export function getCurrentSessionFile() {
   if (!existsSync(sessionsDir)) return null;
 
   try {
-    // Try to match by parent PID chain: Claude spawns the status line command,
-    // so process.ppid (or its parent) should match a session file named <pid>.json
-    const pidsToCheck = new Set([process.ppid]);
-
-    // also check grandparent in case the command runs through a shell
-    try {
-      const grandparent = parseInt(
-        execSync(`ps -o ppid= -p ${process.ppid}`, { stdio: ['pipe','pipe','pipe'] }).toString().trim()
-      );
-      if (grandparent) pidsToCheck.add(grandparent);
-    } catch { /* skip */ }
-
-    for (const pid of pidsToCheck) {
+    // Sobe a árvore de processos até 5 níveis para encontrar o .json da sessão Claude
+    let pid = process.ppid;
+    for (let i = 0; i < 5; i++) {
+      if (!pid || pid <= 1) break;
       const candidate = join(sessionsDir, `${pid}.json`);
       if (existsSync(candidate)) {
         try { return JSON.parse(readFileSync(candidate, 'utf-8')); }
-        catch { /* skip */ }
+        catch { break; }
       }
+      pid = getParentPid(pid);
     }
 
     // Fallback: find a session whose sessionId appears in JSONL files

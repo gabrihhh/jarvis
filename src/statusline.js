@@ -57,8 +57,6 @@ function isMemoryLoaded(sessionId) {
 
 export function renderLine() {
   const mode = readTriggerMode();
-  const triggerInner = ` TRIGGER ${mode.toUpperCase()} `;
-  const triggerBox = buildBox(triggerInner, PINK);
 
   const sessionMeta = getCurrentSessionFile();
   const sessionId = sessionMeta?.sessionId;
@@ -67,9 +65,12 @@ export function renderLine() {
 
   const allEntries = readAllUsage();
 
-  const boxes = (contextBox) => loadedBox
-    ? joinBoxes(contextBox, triggerBox, loadedBox)
-    : joinBoxes(contextBox, triggerBox);
+  const boxes = (contextBox) => {
+    const toJoin = [contextBox];
+    if (mode !== 'off') toJoin.push(buildBox(` TRIGGER ${mode.toUpperCase()} `, PINK));
+    if (loadedBox) toJoin.push(loadedBox);
+    return joinBoxes(...toJoin);
+  };
 
   if (!allEntries.length) {
     const contextBox = buildBox(` CONTEXT ${'░'.repeat(8)} 0% `, CYAN);
