@@ -22,7 +22,7 @@ Reinicie o Claude Code após o setup.
 | Comando | Descrição |
 |---|---|
 | `jarvis` | Mostra a versão |
-| `jarvis --usage` | Dashboard completo de uso (tokens, custo, contexto) |
+| `jarvis --usage` | Dashboard completo de uso (tokens e custo) |
 | `jarvis --watch` | Dashboard com auto-refresh a cada 30s |
 | `jarvis --setup` | Configura status bar, instala slash commands e define trigger padrão |
 | `jarvis --graph` | Abre o Neo4j Browser em localhost:7474 |
@@ -59,13 +59,6 @@ Reinicie o Claude Code após o setup.
 │   Monthly   ████████████████  245.33M   $124.99    4810 req  │
 │   Weekly    ██████░░░░░░░░░░  93.19M    $55.50     2050 req  │
 │   Today     ███░░░░░░░░░░░░░  42.78M    $21.60     767 req   │
-│                                                              │
-├──────────────────────────────────────────────────────────────┤
-│                                                              │
-│   ⬡  Context Window  (current session)                       │
-│                                                              │
-│   ████████████░░░░░░░░░░░░  52%  103.6K / 200.0K             │
-│   146 turns  ·  model: sonnet-4-6                            │
 │                                                              │
 ├──────────────────────────────────────────────────────────────┤
 │                                                              │
