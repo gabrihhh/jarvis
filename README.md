@@ -41,7 +41,7 @@ Reinicie o Claude Code após o setup.
 | `jarvis --line` | Saída de uma linha usada internamente pela status bar |
 | `jarvis --help` | Lista todos os comandos |
 
-**Slash commands** *(dentro do Claude Code)*:
+**Slash commands** *(dentro do Claude Code — instalados por `jarvis --setup`)*:
 
 | Comando | Descrição |
 |---|---|
@@ -49,6 +49,8 @@ Reinicie o Claude Code após o setup.
 | `/create-memory` | Indexa um repositório no grafo de memória (primeira vez) |
 | `/update-memory` | Atualiza o grafo com as mudanças recentes do repositório |
 | `/configure-memory` | Personaliza o schema, regras e fluxos da arquitetura de memória |
+| `/reset-folder` | Reseta todos os repos filhos para um branch (`qa`/`main`), tratando alterações interativamente |
+| `/folder-submit` | Cria branches, commita e faz push das alterações de todos os repos filhos |
 
 ---
 

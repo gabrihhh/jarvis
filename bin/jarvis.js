@@ -2,7 +2,7 @@
 import { run } from '../src/index.js';
 import { renderLine } from '../src/statusline.js';
 import { readTheme, writeTheme, isValidHex, DEFAULT_COLORS, VALID_NAMES, THEME_PATH } from '../src/theme.js';
-import { readFileSync, writeFileSync, existsSync, mkdirSync, copyFileSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync, copyFileSync, readdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { homedir } from 'os';
 import { exec, execSync } from 'child_process';
@@ -87,7 +87,7 @@ if (args.includes('--help') || args.includes('-h')) {
     jarvis --token off           Disable token display
     jarvis --help                Show this help
 
-  Slash commands (inside Claude Code):
+  Slash commands (inside Claude Code — installed by --setup):
     /setup-memory                Setup Docker + Neo4j + register MCP server
     /create-memory               Index a repository into the memory graph (first time)
     /update-memory               Update an existing memory graph with recent changes
@@ -126,18 +126,19 @@ if (args.includes('--graph')) {
   writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
   console.log('  ✓ Status bar configured');
 
-  // Slash commands → ~/.claude/skills/<name>/SKILL.md
-  const skillsDir = join(homedir(), '.claude', 'skills');
-  const srcSkills = join(__dir, '../.claude/skills');
-  for (const skill of ['setup-memory', 'create-memory', 'update-memory', 'configure-memory']) {
-    const destDir = join(skillsDir, skill);
-    mkdirSync(destDir, { recursive: true });
-    copyFileSync(join(srcSkills, skill, 'SKILL.md'), join(destDir, 'SKILL.md'));
-    console.log(`  ✓ Slash command /${skill} installed`);
+  // Slash commands → ~/.claude/commands/<name>.md
+  const commandsDir = join(homedir(), '.claude', 'commands');
+  const srcSlash = join(__dir, '../slash');
+  mkdirSync(commandsDir, { recursive: true });
+  const slashFiles = readdirSync(srcSlash).filter(f => f.endsWith('.md') && f !== 'MEMORY_ARCHITECTURE.md');
+  for (const file of slashFiles) {
+    copyFileSync(join(srcSlash, file), join(commandsDir, file));
+    const name = file.replace('.md', '');
+    console.log(`  ✓ Slash command /${name} installed`);
   }
 
-  // Arquitetura de memória (referenciada pelas skills)
-  copyFileSync(join(srcSkills, 'MEMORY_ARCHITECTURE.md'), join(skillsDir, 'MEMORY_ARCHITECTURE.md'));
+  // Arquivo de suporte (referenciado pelos comandos)
+  copyFileSync(join(srcSlash, 'MEMORY_ARCHITECTURE.md'), join(commandsDir, 'MEMORY_ARCHITECTURE.md'));
   console.log('  ✓ MEMORY_ARCHITECTURE.md installed');
 
   // Trigger padrão: session

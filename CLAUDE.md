@@ -11,7 +11,7 @@ node bin/jarvis.js           # executa direto (desenvolvimento)
 npm link                     # instala globalmente a partir do source local
 jarvis --usage               # dashboard de tokens/custo
 jarvis --watch               # dashboard com auto-refresh 30s
-jarvis --setup               # configura status bar + slash commands + trigger padrão
+jarvis --setup               # configura status bar, copia slash/ → ~/.claude/commands/ e define trigger padrão
 jarvis --line                # saída da status bar (3 linhas de boxes Unicode)
 jarvis --trigger <mode>      # session | prompt | off
 jarvis --graph               # abre Neo4j Browser em localhost:7474
@@ -38,13 +38,14 @@ src/
     neo4j-client.js  # runQuery(), runWriteQuery(), closeDriver()
     query-by-path.js # hook --query: injeta contexto do projeto no prompt
     schema.js        # schema de constraints e índices do Neo4j
-.claude/
-  skills/            # slash commands instalados por jarvis --setup
-    setup-memory/
-    create-memory/
-    update-memory/
-    configure-memory/
-    MEMORY_ARCHITECTURE.md
+slash/                        # fonte de verdade dos slash commands globais
+  setup-memory.md             # sobe Neo4j via Docker e registra MCP server
+  create-memory.md            # indexa repositório no grafo (primeira vez)
+  update-memory.md            # atualiza grafo com mudanças recentes
+  configure-memory.md         # personaliza schema, regras e fluxos de memória
+  reset-folder.md             # reseta todos os repos filhos para qa/main
+  folder-submit.md            # cria branches, commita e faz push dos repos filhos
+  MEMORY_ARCHITECTURE.md      # arquivo de suporte referenciado pelos comandos de memória
 docs/
   FEATURES.md        # roadmap de ideias, bugs conhecidos e features planejadas
 ```
