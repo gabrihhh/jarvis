@@ -92,6 +92,7 @@ if (args.includes('--help') || args.includes('-h')) {
     /create-memory               Index a repository into the memory graph (first time)
     /update-memory               Update an existing memory graph with recent changes
     /configure-memory            Customize the memory graph architecture (schema, rules, flows)
+    /gerar-estimativa            Gera documento de estimativa técnica a partir de um monorepo
 
   Data source: ~/.claude/projects/
 `);
