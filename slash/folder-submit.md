@@ -135,69 +135,38 @@ Continue normalmente com os demais repositórios.
 
 Para cada repositório aprovado (sem arquivos sensíveis), **um de cada vez**:
 
-**5.1 — Mostrar resumo das alterações:**
+**5.1 — Analisar diff e propor tudo de uma vez:**
 
 ```bash
-git -C <repo> diff --stat
-git -C <repo> status --short
+git -C <repo> diff
+git -C <repo> diff --cached
 ```
 
-**5.2 — Perguntar tipo e mensagem:**
+Com base no diff, decida autonomamente:
+- **Tipo**: `fix` se for correção/ajuste, `feat` se for funcionalidade nova ou melhoria
+- **Slug da branch**: camelCase curto que descreva a alteração (ex: `correcaoValidacaoToken`)
+- **Título do commit**: breve, no padrão `<tipo>: [<LABEL>] <título>`
+- **Descrição do commit**: o que foi feito e por quê, baseado no diff
+
+Apresente tudo junto e pergunte **uma única vez**:
 
 ```
 Repositório: api-service
 
-Alterações:
-  M  src/auth/login.js
-  M  src/auth/middleware.js
-  ?? src/utils/newHelper.js
+  Branch:    fix/qa/correcaoValidacaoToken
+  Commit:    fix: [QA] Correção na validação do token de autenticação
 
-  [1] fix    — correção de bug, ajuste, hotfix
-  [2] feature — funcionalidade nova, melhoria
+             Ajustado o middleware de autenticação para rejeitar tokens
+             expirados corretamente. O comportamento anterior permitia
+             tokens inválidos passarem em edge cases de timezone.
 
-Qual o tipo? E qual a mensagem curta da branch? (será usada em camelCase)
-Exemplo: "correcaoValidacaoToken" ou "novaTelaLogin"
+Posso subir assim? (ajuste o que quiser ou confirme para prosseguir)
 ```
 
-Aguarde a resposta do usuário. Valide:
-- Tipo deve ser `fix` ou `feature`
-- Mensagem deve ser curta (sem espaços — se o usuário mandar com espaços, converta para camelCase automaticamente)
-
-Monte o nome da branch:
-```
-<tipo>/<branch-alvo>/<mensagem>
-Exemplo: fix/qa/correcaoValidacaoToken
-```
-
-**5.3 — Gerar mensagem de commit:**
-
-Analise o diff para entender o que foi alterado:
-
-```bash
-git -C <repo> diff
-```
-
-Proponha uma mensagem de commit no padrão:
-
-```
-[<LABEL>] <título breve da alteração>
-
-<descrição do que foi feito e por quê, baseada no diff>
-```
-
-Exemplo:
-```
-[QA] Correção na validação do token de autenticação
-
-Ajustado o middleware de autenticação para rejeitar tokens expirados
-corretamente. O comportamento anterior permitia tokens com expiração
-inválida passarem pela validação em edge cases de timezone.
-```
-
-Mostre a mensagem proposta e pergunte:
-**"Essa mensagem está correta? Pode ajustar o título ou a descrição se quiser."**
-
-Só prossiga após aprovação ou ajuste do usuário.
+Aguarde resposta:
+- **Confirmar / sim / pode:** prossiga para o Passo 6 com esses dados
+- **Ajuste pontual:** aplique e prossiga sem nova confirmação
+- **Cancelar:** pule este repositório e siga para o próximo
 
 ---
 
@@ -234,7 +203,7 @@ Se arquivos inesperados aparecerem no stage (ex: arquivos que não estavam no re
 
 ```bash
 git -C <repo> commit -m "$(cat <<'EOF'
-[<LABEL>] <título>
+<tipo>: [<LABEL>] <título>
 
 <descrição>
 EOF
@@ -268,13 +237,13 @@ Resumo — folder-submit <branch-alvo>
 
   ✅ api-service
      Branch:  fix/qa/correcaoValidacaoToken
-     Commit:  [QA] Correção na validação do token de autenticação
+     Commit:  fix: [QA] Correção na validação do token de autenticação
      Push:    origin/fix/qa/correcaoValidacaoToken ✓
 
   ✅ frontend
-     Branch:  feature/qa/novaTelaLogin
-     Commit:  [QA] Nova tela de login com validação em tempo real
-     Push:    origin/feature/qa/novaTelaLogin ✓
+     Branch:  feat/qa/novaTelaLogin
+     Commit:  feat: [QA] Nova tela de login com validação em tempo real
+     Push:    origin/feat/qa/novaTelaLogin ✓
 
   ⛔ config-service  → ignorado (arquivo .env detectado)
 
