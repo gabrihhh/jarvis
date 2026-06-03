@@ -1,9 +1,9 @@
 ---
-name: folder-submit
+name: submit-folders
 description: Cria branches, commita e faz push das alterações em todos os repositórios git filhos com mudanças locais pendentes
 ---
 
-# /folder-submit — Submeter Alterações dos Repositórios Filhos
+# /submit-folders — Submeter Alterações dos Repositórios Filhos
 
 ## Uso
 
@@ -233,7 +233,7 @@ Se o push falhar, informe o erro e pergunte ao usuário o que fazer.
 Ao concluir todos os repositórios, apresente o resultado:
 
 ```
-Resumo — folder-submit <branch-alvo>
+Resumo — submit-folders <branch-alvo>
 
   ✅ api-service
      Branch:  fix/qa/correcaoValidacaoToken
@@ -251,5 +251,5 @@ Concluído. 2 branches criadas e publicadas, 1 ignorado por segurança.
 
 Branches criadas:
   • fix/qa/correcaoValidacaoToken
-  • feature/qa/novaTelaLogin
+  • feat/qa/novaTelaLogin
 ```

@@ -65,12 +65,27 @@ git -C <repo> show-ref --verify --quiet refs/heads/<branch> 2>/dev/null \
 # exit 0 = existe, exit 1 = não existe
 ```
 
+Para repositórios com alterações locais, verifique se as mudanças já foram enviadas ao remote da branch atual:
+
+```bash
+git -C <repo> fetch origin <branch-atual> 2>/dev/null
+git -C <repo> diff origin/<branch-atual>
+```
+
+Se o diff for vazio, as alterações já estão no remote — descarte automaticamente sem perguntar:
+
+```bash
+git -C <repo> checkout -- .
+git -C <repo> clean -fd
+```
+
 Classifique cada repositório em uma das categorias:
 
 | Categoria | Critério |
 |---|---|
 | `PRONTO` | Branch existe, sem alterações locais |
-| `COM ALTERAÇÕES` | Branch existe, mas tem mudanças locais |
+| `AUTO-DESCARTADO` | Tinha alterações locais, mas já estavam no remote — descartado automaticamente |
+| `COM ALTERAÇÕES` | Branch existe, tem mudanças locais que ainda não subiram ao remote |
 | `SEM BRANCH` | Branch alvo não existe no repo |
 
 ---
@@ -86,18 +101,21 @@ Repositórios encontrados em <pasta atual>:
      • api-service        [main → qa]
      • frontend           [main → qa]
 
+  🔄 AUTO-DESCARTADOS (alterações já estavam no remote — descartadas automaticamente):
+     • worker             [qa]  — 1 arquivo (já sincronizado com origin/qa)
+
   ⚠️  COM ALTERAÇÕES LOCAIS (aguardando decisão):
      • backend            [qa]  — 3 arquivos modificados
 
   ✗  SEM BRANCH "qa" (serão ignorados):
      • legacy-app         — branch "qa" não encontrado
 
-Total: 4 repositórios | 2 prontos | 1 com alterações | 1 sem branch
+Total: 5 repositórios | 2 prontos | 1 auto-descartado | 1 com alterações | 1 sem branch
 ```
 
-Pergunte: **"Posso prosseguir? Vou tratar os repositórios com alterações um a um antes de continuar."**
+**Se não houver nenhum repositório COM ALTERAÇÕES:** prossiga automaticamente para o Passo 6, sem pedir confirmação.
 
-Aguarde confirmação antes de continuar.
+**Se houver repositórios COM ALTERAÇÕES:** pergunte: **"Posso prosseguir? Vou tratar os repositórios com alterações um a um antes de continuar."** e aguarde confirmação antes de continuar.
 
 ---
 
@@ -194,9 +212,10 @@ Resumo — reset-folder <branch>
   ✅ api-service      → <branch> atualizado  (pull: 3 commits novos)
   ✅ frontend         → <branch> atualizado  (pull: já estava atualizado)
   ✅ backend          → <branch> atualizado  (stash criado antes do pull)
+  🔄 worker           → <branch> atualizado  (alterações locais já estavam no remote — descartadas automaticamente)
   ⏭️  legacy-app      → ignorado             (branch "<branch>" não existe)
 
-Concluído. 3 repositórios atualizados, 1 ignorado.
+Concluído. 4 repositórios atualizados, 1 ignorado.
 ```
 
 Se algum repositório ficou com stash pendente, lembre o usuário:
