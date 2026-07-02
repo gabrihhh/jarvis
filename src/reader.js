@@ -103,11 +103,19 @@ function extractUsageFromEntry(entry) {
 
 export function readAllUsage() {
   const files = getAllSessionFiles();
+  const seen = new Set();
   const entries = [];
 
   for (const file of files) {
     const lines = parseJsonlFile(file);
     for (const line of lines) {
+      // Deduplicate by message ID — Claude Code logs one JSONL entry per
+      // content block (thinking, text, tool_use…), all sharing the same
+      // message.id and the same usage data.  Count each API call only once.
+      const msgId = line?.message?.id;
+      if (msgId && seen.has(msgId)) continue;
+      if (msgId) seen.add(msgId);
+
       const usage = extractUsageFromEntry(line);
       if (usage && usage.timestamp) {
         entries.push(usage);
@@ -145,12 +153,17 @@ export function readCurrentSessionUsage(sessionId) {
   if (!sessionId) return [];
 
   const files = getAllSessionFiles();
+  const seen = new Set();
   const entries = [];
 
   for (const file of files) {
     const lines = parseJsonlFile(file);
     for (const line of lines) {
       if (line.sessionId === sessionId) {
+        const msgId = line?.message?.id;
+        if (msgId && seen.has(msgId)) continue;
+        if (msgId) seen.add(msgId);
+
         const usage = extractUsageFromEntry(line);
         if (usage) entries.push(usage);
       }
