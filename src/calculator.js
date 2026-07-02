@@ -1,3 +1,7 @@
+import { readFileSync } from 'fs';
+import { join } from 'path';
+import { homedir } from 'os';
+
 // Pricing per million tokens (USD) - April 2026
 const PRICING = {
   'claude-opus-4-6':    { input: 15.00, output: 75.00, cacheRead: 1.50,  cacheWrite: 18.75 },
@@ -7,12 +11,36 @@ const PRICING = {
 };
 
 // Context window sizes per model
-export const CONTEXT_WINDOWS = {
+const CONTEXT_WINDOWS = {
   'claude-opus-4-6':   200000,
   'claude-sonnet-4-6': 200000,
   'claude-haiku-4-5':  200000,
   'default':           200000,
 };
+
+// Models that support extended context (1M tokens)
+const EXTENDED_CONTEXT = 1_000_000;
+
+/**
+ * Reads ~/.claude/settings.json to detect if the user configured an extended
+ * context model (e.g. "opus[1m]").  Returns the effective context window size
+ * for the given model string.
+ */
+export function getContextWindow(model) {
+  const base = CONTEXT_WINDOWS[model] || CONTEXT_WINDOWS.default;
+  try {
+    const settingsPath = join(homedir(), '.claude', 'settings.json');
+    const settings = JSON.parse(readFileSync(settingsPath, 'utf8'));
+    const configured = settings.model || '';
+    // settings.model can be e.g. "opus[1m]", "sonnet[1m]"
+    if (configured.includes('[1m]')) {
+      // Check if the configured model matches the one we're measuring
+      const shortName = configured.replace(/\[.*\]/, '').trim();
+      if (model.includes(shortName)) return EXTENDED_CONTEXT;
+    }
+  } catch { /* settings unreadable — use default */ }
+  return base;
+}
 
 function getPrice(model) {
   for (const [key, price] of Object.entries(PRICING)) {
@@ -84,7 +112,7 @@ export function aggregateSession(entries) {
 
   const last = entries[entries.length - 1];
   const model = last?.model || 'claude-sonnet-4-6';
-  const contextWindow = CONTEXT_WINDOWS[model] || CONTEXT_WINDOWS.default;
+  const contextWindow = getContextWindow(model);
 
   // last assistant turn shows cumulative context usage via cache tokens
   // We use the most recent entry's tokens as current context position
