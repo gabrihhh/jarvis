@@ -6,8 +6,6 @@ export const THEME_PATH = join(homedir(), '.claude', 'jarvis-theme.json');
 
 export const DEFAULT_COLORS = {
   context: '#22d3ee',
-  trigger: '#f472b6',
-  memory:  '#4ade80',
   tokens:  '#ef4444',
 };
 

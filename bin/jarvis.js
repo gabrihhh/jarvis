@@ -2,57 +2,11 @@
 import { run } from '../src/index.js';
 import { renderLine } from '../src/statusline.js';
 import { readTheme, writeTheme, isValidHex, DEFAULT_COLORS, VALID_NAMES, THEME_PATH } from '../src/theme.js';
+import { readConfig, writeConfig } from '../src/config.js';
 import { readFileSync, writeFileSync, existsSync, mkdirSync, copyFileSync, readdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { homedir } from 'os';
-import { exec, execSync } from 'child_process';
 import { fileURLToPath } from 'url';
-
-const MEMORY_CONFIG_PATH = join(homedir(), '.claude-memory.json');
-
-function checkSetupDone() {
-  const settingsPath = join(homedir(), '.claude', 'settings.json');
-  if (!existsSync(settingsPath)) return false;
-  try {
-    const s = JSON.parse(readFileSync(settingsPath, 'utf-8'));
-    return !!(s?.statusLine);
-  } catch { return false; }
-}
-
-function checkMcpRegistered() {
-  const settingsPath = join(homedir(), '.claude', 'settings.json');
-  if (!existsSync(settingsPath)) return false;
-  try {
-    const s = JSON.parse(readFileSync(settingsPath, 'utf-8'));
-    return !!(s?.mcpServers?.['jarvis-memory']);
-  } catch { return false; }
-}
-
-function checkNeo4jRunning() {
-  try {
-    const out = execSync('docker ps --filter name=claude-memory --filter status=running --format "{{.Names}}"', { stdio: 'pipe' }).toString().trim();
-    return out.includes('claude-memory');
-  } catch { return false; }
-}
-
-function loadMemoryConfig() {
-  try { return JSON.parse(readFileSync(MEMORY_CONFIG_PATH, 'utf-8')); }
-  catch { return { neo4j: { uri: 'bolt://localhost:7687', user: 'neo4j', password: 'claudememory' } }; }
-}
-
-function saveMemoryConfig(cfg) {
-  writeFileSync(MEMORY_CONFIG_PATH, JSON.stringify(cfg, null, 2));
-}
-
-function setHook(settings, enabled) {
-  if (!settings.hooks) settings.hooks = {};
-  if (enabled) {
-    settings.hooks.UserPromptSubmit = [{ matcher: '', hooks: [{ type: 'command', command: 'jarvis --query' }] }];
-  } else {
-    delete settings.hooks.UserPromptSubmit;
-    if (!Object.keys(settings.hooks).length) delete settings.hooks;
-  }
-}
 
 const args = process.argv.slice(2);
 
@@ -64,21 +18,16 @@ if (args.length === 0) {
 
 if (args.includes('--help') || args.includes('-h')) {
   console.log(`
-  jarvis  —  Claude Code terminal dashboard + semantic memory graph
+  jarvis  —  Claude Code terminal dashboard + status bar
 
   Usage:
     jarvis                       Show version
     jarvis --usage               Show full usage dashboard
     jarvis --watch               Refresh dashboard every 30s
-    jarvis --setup               Install status bar, skills and default trigger (session)
-    jarvis --graph               Open Neo4j browser at http://localhost:7474
+    jarvis --setup               Install status bar and slash commands
     jarvis --line                Single-line status (for Claude Code status bar)
-    jarvis --trigger             Show current trigger mode
-    jarvis --trigger session     Hook runs once per session (default)
-    jarvis --trigger prompt      Hook runs on every prompt
-    jarvis --trigger off         Disable automatic memory loading
     jarvis --theme               Show current statusline theme
-    jarvis --theme <name>:<hex>  Set a box color (context, trigger, memory, tokens)
+    jarvis --theme <name>:<hex>  Set a box color (context, tokens)
     jarvis --theme <name>:reset  Reset a single box to default color
     jarvis --theme reset         Reset all colors to default
     jarvis --token               Show current token display mode
@@ -87,34 +36,15 @@ if (args.includes('--help') || args.includes('-h')) {
     jarvis --token off           Disable token display
     jarvis --help                Show this help
 
-  Slash commands (inside Claude Code — installed by --setup):
-    /setup-memory                Setup Docker + Neo4j + register MCP server
-    /create-memory               Index a repository into the memory graph (first time)
-    /update-memory               Update an existing memory graph with recent changes
-    /configure-memory            Customize the memory graph architecture (schema, rules, flows)
-    /gerar-estimativa            Gera documento de estimativa técnica a partir de um monorepo
+  Slash commands: --setup instala no ~/.claude/commands/ todo .md
+  presente na pasta slash/ deste pacote.
 
   Data source: ~/.claude/projects/
 `);
   process.exit(0);
 }
 
-if (args.includes('--graph')) {
-  if (!checkNeo4jRunning()) {
-    console.error('\n  ✗ Neo4j não está rodando.');
-    console.error('  Execute /setup-memory dentro do Claude Code para iniciar o container.\n');
-    process.exit(1);
-  }
-  const url = 'http://localhost:7474';
-  const opener =
-    process.platform === 'darwin' ? 'open' :
-    process.platform === 'win32'  ? 'start' :
-    'xdg-open';
-  console.log(`  Opening Neo4j Browser at ${url} ...\n`);
-  exec(`${opener} ${url}`, (err) => {
-    if (err) console.error(`  Could not open browser automatically. Visit ${url} manually.\n`);
-  });
-} else if (args.includes('--setup')) {
+if (args.includes('--setup')) {
   const __dir = dirname(fileURLToPath(import.meta.url));
 
   // Status bar
@@ -127,79 +57,24 @@ if (args.includes('--graph')) {
   writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
   console.log('  ✓ Status bar configured');
 
-  // Slash commands → ~/.claude/commands/<name>.md
+  // Slash commands → ~/.claude/commands/<name>.md — copia todo .md em slash/
   const commandsDir = join(homedir(), '.claude', 'commands');
   const srcSlash = join(__dir, '../slash');
-  mkdirSync(commandsDir, { recursive: true });
-  const slashFiles = readdirSync(srcSlash).filter(f => f.endsWith('.md') && f !== 'MEMORY_ARCHITECTURE.md');
-  for (const file of slashFiles) {
-    copyFileSync(join(srcSlash, file), join(commandsDir, file));
-    const name = file.replace('.md', '');
-    console.log(`  ✓ Slash command /${name} installed`);
-  }
-
-  // Arquivo de suporte (referenciado pelos comandos)
-  copyFileSync(join(srcSlash, 'MEMORY_ARCHITECTURE.md'), join(commandsDir, 'MEMORY_ARCHITECTURE.md'));
-  console.log('  ✓ MEMORY_ARCHITECTURE.md installed');
-
-  // Trigger padrão: session
-  const memoryCfg = loadMemoryConfig();
-  if (!memoryCfg.trigger) {
-    memoryCfg.trigger = 'session';
-    saveMemoryConfig(memoryCfg);
-    setHook(settings, true);
-    writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
-    console.log('  ✓ Memory trigger set to: session');
+  const slashFiles = existsSync(srcSlash)
+    ? readdirSync(srcSlash).filter(f => f.endsWith('.md'))
+    : [];
+  if (slashFiles.length) {
+    mkdirSync(commandsDir, { recursive: true });
+    for (const file of slashFiles) {
+      copyFileSync(join(srcSlash, file), join(commandsDir, file));
+      const name = file.replace('.md', '');
+      console.log(`  ✓ Slash command /${name} installed`);
+    }
+  } else {
+    console.log('  · No slash commands to install');
   }
 
   console.log('\n  Restart Claude Code to activate.\n');
-} else if (args.includes('--trigger')) {
-  const mode = args[args.indexOf('--trigger') + 1];
-  const validModes = ['session', 'prompt', 'off'];
-
-  if (!mode || !validModes.includes(mode)) {
-    const cfg = loadMemoryConfig();
-    const current = cfg.trigger || 'session';
-    console.log(`\n  Trigger mode: ${current}\n`);
-    console.log(`  Usage: jarvis --trigger <session|prompt|off>\n`);
-    process.exit(0);
-  }
-
-  if (mode !== 'off') {
-    if (!checkSetupDone()) {
-      console.error('\n  ✗ jarvis --setup não foi executado.');
-      console.error('  Execute primeiro: jarvis --setup\n');
-      process.exit(1);
-    }
-    if (!checkMcpRegistered()) {
-      console.error('\n  ✗ MCP server jarvis-memory não está registrado.');
-      console.error('  Execute /setup-memory dentro do Claude Code e reinicie antes de ativar o trigger.\n');
-      process.exit(1);
-    }
-    if (!checkNeo4jRunning()) {
-      console.error('\n  ✗ Neo4j não está rodando.');
-      console.error('  Execute /setup-memory dentro do Claude Code para iniciar o container.\n');
-      process.exit(1);
-    }
-  }
-
-  const cfg = loadMemoryConfig();
-  cfg.trigger = mode;
-  saveMemoryConfig(cfg);
-
-  const settingsPath = join(homedir(), '.claude', 'settings.json');
-  let settings = {};
-  if (existsSync(settingsPath)) {
-    try { settings = JSON.parse(readFileSync(settingsPath, 'utf-8')); } catch { /* keep empty */ }
-  }
-  setHook(settings, mode !== 'off');
-  writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
-
-  const icons = { session: '⬡', prompt: '⬡⬡', off: '○' };
-  console.log(`\n  ${icons[mode]} Trigger mode set to: ${mode}`);
-  if (mode !== 'off') console.log(`  Hook configured in ~/.claude/settings.json`);
-  else console.log(`  Hook removed from ~/.claude/settings.json`);
-  console.log(`\n  Restart Claude Code to activate.\n`);
 } else if (args.includes('--theme')) {
   const { Chalk } = await import('chalk');
   const chalk = new Chalk({ level: 3 });
@@ -229,7 +104,7 @@ if (args.includes('--graph')) {
   // jarvis --theme name:value
   const sep = value.indexOf(':');
   if (sep === -1) {
-    console.error(`\n  ✗ Invalid format. Use: jarvis --theme <context|trigger|memory>:<#hexcolor|reset>\n`);
+    console.error(`\n  ✗ Invalid format. Use: jarvis --theme <${VALID_NAMES.join('|')}>:<#hexcolor|reset>\n`);
     process.exit(1);
   }
 
@@ -264,26 +139,19 @@ if (args.includes('--graph')) {
   const validValues = ['on', 'off', 'complete'];
 
   if (!value || !validValues.includes(value)) {
-    const cfg = loadMemoryConfig();
+    const cfg = readConfig();
     const current = cfg.tokenDisplay || 'off';
     console.log(`\n  Token display: ${current}\n`);
     console.log(`  Usage: jarvis --token <on|complete|off>\n`);
     process.exit(0);
   }
 
-  const cfg = loadMemoryConfig();
+  const cfg = readConfig();
   cfg.tokenDisplay = value === 'on' ? 'simple' : value;
-  saveMemoryConfig(cfg);
+  writeConfig(cfg);
 
   const labels = { simple: 'on (◈ total tokens)', off: 'off', complete: 'complete (breakdown)' };
   console.log(`\n  ✓ Token display set to: ${labels[cfg.tokenDisplay]}\n`);
-  process.exit(0);
-} else if (args.includes('--query')) {
-  try {
-    const { queryByPath } = await import('../src/memory/query-by-path.js');
-    const result = await queryByPath(process.cwd());
-    if (result) process.stdout.write(result + '\n');
-  } catch { /* silencioso — hook nunca deve quebrar a sessão */ }
   process.exit(0);
 } else if (args.includes('--line') || args.includes('-l')) {
   renderLine();

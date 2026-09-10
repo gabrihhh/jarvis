@@ -1,6 +1,6 @@
 # CLAUDE.md — jarvis
 
-CLI npm (`@gabrihhh/jarvis`) que entrega dashboard de uso de tokens, status bar em tempo real e grafo de memória semântica (Neo4j) para o **Claude Code** — 100% local, sem servidor externo.
+CLI npm (`@gabrihhh/jarvis`) que entrega dashboard de uso de tokens e status bar em tempo real para o **Claude Code** — 100% local, sem servidor externo.
 
 ---
 
@@ -11,11 +11,10 @@ node bin/jarvis.js           # executa direto (desenvolvimento)
 npm link                     # instala globalmente a partir do source local
 jarvis --usage               # dashboard de tokens/custo
 jarvis --watch               # dashboard com auto-refresh 30s
-jarvis --setup               # configura status bar, copia slash/ → ~/.claude/commands/ e define trigger padrão
-jarvis --line                # saída da status bar (3 linhas de boxes Unicode)
-jarvis --trigger <mode>      # session | prompt | off
-jarvis --graph               # abre Neo4j Browser em localhost:7474
-jarvis --query               # hook interno UserPromptSubmit (não chamar manualmente)
+jarvis --setup               # configura status bar e copia slash/ → ~/.claude/commands/
+jarvis --line                # saída da status bar (boxes Unicode)
+jarvis --theme               # gerencia cores dos boxes (context | tokens)
+jarvis --token <mode>        # on | complete | off
 ```
 
 Não há step de build — o projeto é ESM puro (`"type": "module"`), Node.js >= 18.
@@ -33,19 +32,10 @@ src/
   reader.js          # leitura de JSONL de sessões + getCurrentSessionFile()
   calculator.js      # aggregateStats(), aggregateSession(), formatTokens(), formatCost()
   display.js         # render() — dashboard completo com boxes Unicode
-  memory/
-    mcp-server.js    # MCP server jarvis-memory (save/query/list/search)
-    neo4j-client.js  # runQuery(), runWriteQuery(), closeDriver()
-    query-by-path.js # hook --query: injeta contexto do projeto no prompt
-    schema.js        # schema de constraints e índices do Neo4j
-slash/                        # fonte de verdade dos slash commands globais
-  setup-memory.md             # sobe Neo4j via Docker e registra MCP server
-  create-memory.md            # indexa repositório no grafo (primeira vez)
-  update-memory.md            # atualiza grafo com mudanças recentes
-  configure-memory.md         # personaliza schema, regras e fluxos de memória
-  reset-folder.md             # reseta todos os repos filhos para qa/main
-  folder-submit.md            # cria branches, commita e faz push dos repos filhos
-  MEMORY_ARCHITECTURE.md      # arquivo de suporte referenciado pelos comandos de memória
+  theme.js           # readTheme()/writeTheme() — cores dos boxes da status bar
+  config.js          # readConfig()/writeConfig() — config de runtime (tokenDisplay)
+slash/                        # todo .md aqui é copiado por --setup para ~/.claude/commands/
+                              # (vem vazia por padrão — receber novos slash commands aqui)
 docs/
   FEATURES.md        # roadmap de ideias, bugs conhecidos e features planejadas
 ```
@@ -56,11 +46,11 @@ docs/
 
 | Arquivo | Propósito |
 |---|---|
-| `~/.claude-memory.json` | config persistente: trigger mode + credenciais Neo4j |
-| `~/.claude/settings.json` | status bar + hook UserPromptSubmit gerenciados por `jarvis --setup` / `--trigger` |
+| `~/.claude/jarvis.json` | config persistente: modo de exibição de tokens (`tokenDisplay`) |
+| `~/.claude/jarvis-theme.json` | cores customizadas dos boxes da status bar |
+| `~/.claude/settings.json` | status bar gerenciada por `jarvis --setup` |
 | `~/.claude/sessions/<pid>.json` | metadados de sessão criados pelo Claude Code (`sessionId`, `cwd`, `startedAt`) |
 | `~/.claude/projects/**/*.jsonl` | histórico de uso de tokens por sessão (fonte primária do dashboard) |
-| `/tmp/jarvis-memory-<sessionId>.lock` | sinaliza que memória foi injetada na sessão (TTL 5min, consumido ao ler) |
 
 ---
 
@@ -81,8 +71,7 @@ docs/
 ### Status bar (`jarvis --line`)
 
 - É chamada pelo Claude Code a cada prompt — deve ser rápida (< 200ms)
-- Retorna exatamente 3 linhas de texto com boxes Unicode
-- Quando `trigger === 'off'`: exibir **apenas** o context box (sem box TRIGGER)
+- Quando `--token off`: exibir **apenas** o context box
 - Context window é sempre por sessão — usar `sessionId` do terminal atual via `getCurrentSessionFile()`
 
 ### Identificação de sessão (`reader.js`)

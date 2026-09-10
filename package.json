@@ -1,10 +1,9 @@
 {
   "name": "@gabrihhh/jarvis",
-  "version": "2.9.0",
-  "description": "Claude Code terminal dashboard + semantic memory graph via Neo4j",
+  "version": "3.0.0",
+  "description": "Claude Code terminal dashboard + real-time status bar",
   "bin": {
-    "jarvis": "bin/jarvis.js",
-    "jarvis-memory": "bin/jarvis-memory.js"
+    "jarvis": "bin/jarvis.js"
   },
   "main": "./src/index.js",
   "scripts": {
@@ -22,16 +21,11 @@
     "usage",
     "stats",
     "cli",
-    "status-bar",
-    "neo4j",
-    "memory-graph",
-    "mcp"
+    "status-bar"
   ],
   "license": "MIT",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.29.0",
-    "chalk": "^5.3.0",
-    "neo4j-driver": "^6.0.1"
+    "chalk": "^5.3.0"
   },
   "type": "module",
   "engines": {

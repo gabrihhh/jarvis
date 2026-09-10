@@ -1,0 +1,491 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Fluxo de trabalho com IA" id="fluxo-ia-01">
+    <mxGraphModel dx="1414" dy="756" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="5000" pageHeight="2100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- ===================== LEGENDA ===================== -->
+        <mxCell id="leg_title" value="Legenda" style="text;html=1;fontStyle=1;fontSize=14;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="820" y="40" width="200" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg_start" value="Início / Fim" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="820" y="70" width="150" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="leg_proc" value="Ação automática da IA" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="820" y="116" width="150" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="leg_user" value="Interação com o usuário" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="820" y="162" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="leg_dec" value="Decisão" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="820" y="212" width="150" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="leg_sub" value="Sub-agent (IA especializada)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="820" y="272" width="150" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="leg_divert" value="Desvio / encerra" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="820" y="318" width="150" height="36" as="geometry" />
+        </mxCell>
+
+        <mxCell id="note_index" value="index.md  (em plans/&lt;plan-N&gt;/)  =  PAINEL DE PROGRESSO do plano.&#10;TODA fase escreve nele: status por fase + timestamps, branch alvo, tipo (fix/feat), stack e cenários de teste, organização, id do card, e CADA rodada do /resolve-reviewer (1ª, 2ª, 3ª...).&#10;GUARD: cada fase só roda se a anterior estiver concluída no index." style="shape=note;whiteSpace=wrap;html=1;fillColor=#fff9c4;strokeColor=#d6b656;align=left;verticalAlign=top;size=14;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="820" y="380" width="300" height="180" as="geometry" />
+        </mxCell>
+
+        <!-- ===================== FASE 1: /setup ===================== -->
+        <mxCell id="fase1_header" value="FASE 1 — Configuração  (/setup)" style="text;html=1;fontStyle=1;fontSize=16;align=left;verticalAlign=middle;fillColor=#f5f5f5;strokeColor=#666666;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="250" y="30" width="320" height="30" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s_start" value="/setup" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="300" y="90" width="220" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="s_dec_jira" value="MCP do Jira conectado?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="330" y="180" width="160" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="s_proc_jira" value="Conectar o MCP do Jira (com o usuário)" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="600" y="190" width="200" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="s_dec_gh" value="GitHub CLI (gh) configurado?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="330" y="300" width="160" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="s_proc_gh" value="Configurar o gh (com ajuda do usuário)" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="600" y="310" width="200" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="s_input_mono" value="Perguntar qual a pasta do monorepo a ser usada" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="300" y="420" width="220" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="s_proc_front" value="Detectar a pasta de frontend do repositório" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="300" y="520" width="220" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="s_proc_createclaude" value="Criar o .claude dentro da pasta do monorepo" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="300" y="620" width="220" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="s_proc_classify" value="Analisar todas as pastas e classificar API vs Front-end (com ajuda do usuário)" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="300" y="720" width="220" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="s_proc_save" value="Salvar a classificação (API / Front-end) no .claude" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="300" y="840" width="220" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="s_end" value="Fim do /setup&#10;(ambiente configurado)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="300" y="940" width="220" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- EDGES FASE 1 -->
+        <mxCell id="e_start_jira" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="s_start" target="s_dec_jira"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_jira_nao" value="Não" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="s_dec_jira" target="s_proc_jira"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_jira_rejoin" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="s_proc_jira" target="s_dec_gh"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_jira_sim" value="Sim" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="s_dec_jira" target="s_dec_gh"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_gh_nao" value="Não" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="s_dec_gh" target="s_proc_gh"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_gh_rejoin" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="s_proc_gh" target="s_input_mono"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_gh_sim" value="Sim" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="s_dec_gh" target="s_input_mono"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_mono_front" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="s_input_mono" target="s_proc_front"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_front_create" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="s_proc_front" target="s_proc_createclaude"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_create_classify" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="s_proc_createclaude" target="s_proc_classify"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_classify_save" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="s_proc_classify" target="s_proc_save"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_save_end" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="s_proc_save" target="s_end"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- ===================== FASE 2: /scope ===================== -->
+        <mxCell id="fase2_header" value="FASE 2 — Scope  (/scope)" style="text;html=1;fontStyle=1;fontSize=16;align=left;verticalAlign=middle;fillColor=#f5f5f5;strokeColor=#666666;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="1130" y="30" width="320" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="es_start" value="/scope" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1130" y="90" width="260" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="es_dec_claude" value=".claude populado corretamente?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="1170" y="180" width="180" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="es_suggest_setup" value="Sugerir rodar /setup e encerrar" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="1470" y="195" width="220" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="es_input_branch" value="Perguntar: as alterações serão na main ou em qa?" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="1130" y="300" width="260" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="es_sub_checkout" value="Sub-agent: em todas as pastas, checkout na branch escolhida + pull. Avisa e pede confirmação antes de descartar qualquer branch/alteração local — a verdade é o remote" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="1130" y="400" width="260" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="es_input_change" value="Perguntar qual alteração será implementada nesta rodada" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="1130" y="540" width="260" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="es_input_type" value="Definir com o usuário: a alteração é fix ou feat?" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="1130" y="640" width="260" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="es_proc_understand" value="Mapear o fluxo real: entrar pelo front e seguir até a API (usa classificação API/front do .claude)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="1130" y="750" width="260" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="es_test_stack" value="Detectar o stack de teste dos repositórios e confirmar com o usuário qual usar" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="1130" y="850" width="260" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="es_dec_doubts" value="Ainda há dúvidas? (100% de certeza?)" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="1170" y="970" width="180" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="es_ask" value="Perguntar ao usuário (ask me — sem limite de perguntas)" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="1470" y="980" width="220" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="es_proc_spec" value="Criar a especificação com base em tudo que foi conversado, incluindo os cenários de teste e2e/unit do escopo (apenas do novo, nada pré-existente)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="1130" y="1100" width="260" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="es_show" value="Mostrar a especificação em tela para aprovação" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="1130" y="1210" width="260" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="es_dec_approve" value="Especificação aprovada?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="1170" y="1310" width="180" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="es_review" value="Sub-agent de review da especificação (segurança e falhas)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="1130" y="1440" width="260" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="es_dec_gaps" value="Todos os gaps de implementação fechados?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="1170" y="1550" width="180" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="es_review_ask" value="Sub-agent traz perguntas ao usuário para fechar os gaps" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="1470" y="1570" width="220" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="es_proc_save" value="Criar em plans/ uma pasta sequencial (plan-N) e salvar o markdown da especificação (uma pasta por spec)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="1130" y="1680" width="260" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="es_proc_index" value="Criar index.md (painel) na pasta do plan: título, tipo (fix/feat), branch alvo, stack e cenários de teste, início/fim do scope. Marca /scope como concluído" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="1130" y="1790" width="260" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="es_end" value="Fim do /scope&#10;(spec aprovada e salva)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1130" y="1930" width="260" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- EDGES FASE 2 -->
+        <mxCell id="e2_start_claude" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="es_start" target="es_dec_claude"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e2_claude_nao" value="Não" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="es_dec_claude" target="es_suggest_setup"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e2_claude_sim" value="Sim" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="es_dec_claude" target="es_input_branch"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e2_branch_checkout" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="es_input_branch" target="es_sub_checkout"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e2_checkout_change" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="es_sub_checkout" target="es_input_change"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e2_change_type" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="es_input_change" target="es_input_type"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e2_type_understand" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="es_input_type" target="es_proc_understand"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e2_understand_teststack" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="es_proc_understand" target="es_test_stack"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e2_teststack_doubts" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="es_test_stack" target="es_dec_doubts"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e2_doubts_sim" value="Sim (há dúvidas)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="es_dec_doubts" target="es_ask"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e2_ask_loop" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="es_ask" target="es_dec_doubts"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e2_doubts_nao" value="Não (100% certeza)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="es_dec_doubts" target="es_proc_spec"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e2_spec_show" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="es_proc_spec" target="es_show"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e2_show_approve" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="es_show" target="es_dec_approve"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e2_approve_nao" value="Não (ajustar spec)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="es_dec_approve" target="es_proc_spec"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e2_approve_sim" value="Sim" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="es_dec_approve" target="es_review"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e2_review_gaps" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="es_review" target="es_dec_gaps"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e2_gaps_nao" value="Não (há gaps)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="es_dec_gaps" target="es_review_ask"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e2_reviewask_loop" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="es_review_ask" target="es_dec_gaps"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e2_gaps_sim" value="Sim (fechados)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="es_dec_gaps" target="es_proc_save"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e2_save_index" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="es_proc_save" target="es_proc_index"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e2_index_end" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="es_proc_index" target="es_end"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- ===================== FASE 3: /blueprint ===================== -->
+        <mxCell id="fase3_header" value="FASE 3 — Blueprint  (/blueprint)" style="text;html=1;fontStyle=1;fontSize=16;align=left;verticalAlign=middle;fillColor=#f5f5f5;strokeColor=#666666;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="1780" y="30" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="bp_start" value="/blueprint" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1780" y="90" width="260" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="bp_read_index" value="Ler o index.md do plan ativo (spec, branch, progresso)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="1780" y="180" width="260" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="bp_dec_guard" value="/scope concluído no index?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="1820" y="290" width="180" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="bp_divert" value="Sugerir rodar /scope e encerrar" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="2090" y="305" width="220" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="bp_sub_analyze" value="Sub-agent: analisar a spec e depois os repositórios — entender como está hoje e o que precisa ser feito para implementar o que foi escopado (gaps já fechados no /scope)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="1780" y="410" width="260" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="bp_proc_create" value="Criar na pasta do plan o planejamento de implementação, incluindo os testes e2e/unit a criar (derivados dos cenários da spec)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="1780" y="560" width="260" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="bp_proc_index" value="Atualizar o index.md: marcar a fase /blueprint como concluída" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="1780" y="690" width="260" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="bp_end" value="Fim do /blueprint&#10;(planejamento de implementação criado)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1780" y="800" width="260" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- EDGES FASE 3 -->
+        <mxCell id="e3_start_read" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="bp_start" target="bp_read_index"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e3_read_guard" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="bp_read_index" target="bp_dec_guard"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e3_guard_nao" value="Não" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="bp_dec_guard" target="bp_divert"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e3_guard_sim" value="Sim" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="bp_dec_guard" target="bp_sub_analyze"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e3_analyze_create" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="bp_sub_analyze" target="bp_proc_create"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e3_create_index" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="bp_proc_create" target="bp_proc_index"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e3_index_end" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="bp_proc_index" target="bp_end"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- ===================== FASE 4: /card ===================== -->
+        <mxCell id="fase4_header" value="FASE 4 — Card no Jira  (/card)" style="text;html=1;fontStyle=1;fontSize=16;align=left;verticalAlign=middle;fillColor=#f5f5f5;strokeColor=#666666;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="2340" y="30" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="cd_start" value="/card" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="2340" y="90" width="260" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="cd_read_index" value="Ler o index.md do plan ativo (progresso)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="2340" y="180" width="260" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="cd_dec_guard" value="/blueprint concluído no index?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="2380" y="290" width="180" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="cd_divert_bp" value="Sugerir rodar /blueprint e encerrar" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="2680" y="305" width="220" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="cd_dec_mcp" value="MCP do Jira conectado?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="2380" y="410" width="180" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="cd_divert" value="Alertar e sugerir /setup (conectar MCP) e encerrar" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="2680" y="425" width="220" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="cd_proc_orgs" value="Entrar no Jira (MCP) e listar as organizações existentes" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="2340" y="540" width="260" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="cd_input_org" value="Perguntar ao usuário qual organização é este planejamento" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="2340" y="640" width="260" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="cd_proc_saveorg" value="Salvar a organização escolhida no index.md" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="2340" y="740" width="260" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="cd_proc_create" value="Criar a tarefa no board escolhido&#10;Título: [(main/qa)] (fix/feat): [titulo]&#10;Descrição: todo o planejamento de implementação" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="2340" y="840" width="260" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="cd_dec_status" value="O board tem o status 'Desenvolvimento'?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="2380" y="980" width="180" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="cd_input_status" value="Perguntar ao usuário qual status usar" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="2680" y="995" width="220" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="cd_proc_status" value="Mover o card para 'Desenvolvimento' (ou o status informado)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="2340" y="1130" width="260" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="cd_proc_assign" value="Atribuir (assinar) o card ao usuário" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="2340" y="1240" width="260" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="cd_proc_comment" value="Preencher o card com o máximo de informações + comentário com o tempo início→fim do scope" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="2340" y="1320" width="260" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="cd_proc_index" value="Pegar o id do card (ex: VENA-223), salvar no index.md e marcar a fase /card como concluída" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="2340" y="1440" width="260" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="cd_end" value="Fim do /card&#10;(card criado e vinculado ao plan)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="2340" y="1560" width="260" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- EDGES FASE 4 -->
+        <mxCell id="e4_start_read" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="cd_start" target="cd_read_index"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e4_read_guard" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="cd_read_index" target="cd_dec_guard"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e4_guard_nao" value="Não" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="cd_dec_guard" target="cd_divert_bp"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e4_guard_sim" value="Sim" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="cd_dec_guard" target="cd_dec_mcp"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e4_mcp_nao" value="Não" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="cd_dec_mcp" target="cd_divert"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e4_mcp_sim" value="Sim" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="cd_dec_mcp" target="cd_proc_orgs"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e4_orgs_input" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="cd_proc_orgs" target="cd_input_org"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e4_input_saveorg" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="cd_input_org" target="cd_proc_saveorg"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e4_saveorg_create" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="cd_proc_saveorg" target="cd_proc_create"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e4_create_status" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="cd_proc_create" target="cd_dec_status"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e4_status_sim" value="Sim" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="cd_dec_status" target="cd_proc_status"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e4_status_nao" value="Não" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="cd_dec_status" target="cd_input_status"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e4_inputstatus_move" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="cd_input_status" target="cd_proc_status"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e4_status_assign" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="cd_proc_status" target="cd_proc_assign"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e4_assign_comment" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="cd_proc_assign" target="cd_proc_comment"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e4_comment_index" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="cd_proc_comment" target="cd_proc_index"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e4_index_end" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="cd_proc_index" target="cd_end"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- ===================== FASE 5: /execute ===================== -->
+        <mxCell id="fase5_header" value="FASE 5 — Execução  (/execute)" style="text;html=1;fontStyle=1;fontSize=16;align=left;verticalAlign=middle;fillColor=#f5f5f5;strokeColor=#666666;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="2960" y="30" width="360" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ex_start" value="/execute" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="2960" y="90" width="260" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="ex_read" value="Ler o index.md e o plano de implementação (blueprint) do plan ativo" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="2960" y="180" width="260" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="ex_dec_guard" value="/card concluído no index?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="3000" y="290" width="180" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="ex_divert" value="Sugerir rodar /card e encerrar" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="3300" y="180" width="230" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ex_sub_branch" value="Sub-agent: em cada repositório, a partir da branch base (qa/main), criar a branch:&#10;(fix/feat)/(qa/main)/(id do card)&#10;ex: fix/main/VENA-223" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="2960" y="410" width="260" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="ex_note_multi" value="Multi-repo: todos os repositórios usam o MESMO card, a MESMA branch e o MESMO título de commit e PR" style="shape=note;whiteSpace=wrap;html=1;fillColor=#fff9c4;strokeColor=#d6b656;align=left;verticalAlign=top;size=14;" vertex="1" parent="1">
+          <mxGeometry x="3300" y="420" width="230" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="ex_impl" value="Implementar com base em todo o plano — código E os testes e2e/unitários do escopo (usando o stack confirmado, só do novo)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="2960" y="560" width="260" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="ex_commit" value="Commit das alterações (mesmo título em todos os repos)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="2960" y="680" width="260" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ex_sub_review" value="Sub-agent: rodar /code-review sobre o que foi feito (traz o review completo: must-change, suggestions, etc.)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="2960" y="780" width="260" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="ex_fix_review" value="Ajustar apenas os must-change e as suggestions fáceis de resolver" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="2960" y="890" width="260" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="ex_dec_review" value="Must-change resolvidos e suggestions fáceis aplicadas?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="3000" y="990" width="180" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="ex_pr" value="Push e abrir PR&#10;Título: [(QA/MAIN)] (feat/fix)(id): titulo&#10;ex: [MAIN] fix(VENA-223): Otimização esteira&#10;Descrição: em linguagem leiga, o que foi feito" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="2960" y="1160" width="260" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="ex_dec_ci" value="A PR passou nos checks do CI?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="3000" y="1310" width="180" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="ex_fix" value="Ajustar o código e novo commit/push até passar nos checks" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="3300" y="1325" width="230" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="ex_card_review" value="Mover o card no Jira para 'code-review' (MCP)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="2960" y="1460" width="260" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="ex_index" value="Atualizar o index.md: marcar /execute concluído + horário final" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="2960" y="1560" width="260" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="ex_end" value="Fim do /execute&#10;(PR pronta para review)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="2960" y="1680" width="260" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- EDGES FASE 5 -->
+        <mxCell id="e5_start_read" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ex_start" target="ex_read"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e5_read_guard" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ex_read" target="ex_dec_guard"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e5_guard_nao" value="Não" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ex_dec_guard" target="ex_divert"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e5_guard_sim" value="Sim" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ex_dec_guard" target="ex_sub_branch"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e5_note_link" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;endArrow=none;strokeColor=#d6b656;" edge="1" parent="1" source="ex_note_multi" target="ex_sub_branch"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e5_branch_impl" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ex_sub_branch" target="ex_impl"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e5_impl_commit" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ex_impl" target="ex_commit"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e5_commit_review" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ex_commit" target="ex_sub_review"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e5_review_fix" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ex_sub_review" target="ex_fix_review"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e5_fix_dec" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ex_fix_review" target="ex_dec_review"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e5_decreview_nao" value="Não (revisar de novo)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="ex_dec_review" target="ex_sub_review"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e5_decreview_sim" value="Sim" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ex_dec_review" target="ex_pr"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e5_pr_ci" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ex_pr" target="ex_dec_ci"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e5_ci_nao" value="Não" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ex_dec_ci" target="ex_fix"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e5_fix_loop" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="ex_fix" target="ex_dec_ci"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e5_ci_sim" value="Sim (PR pronta p/ review)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ex_dec_ci" target="ex_card_review"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e5_review_index" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ex_card_review" target="ex_index"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e5_index_end" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ex_index" target="ex_end"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- ===================== FASE 6: /create-test ===================== -->
+        <mxCell id="fase_ct_header" value="FASE 6 — Guia de Teste  (/create-test)" style="text;html=1;fontStyle=1;fontSize=16;align=left;verticalAlign=middle;fillColor=#f5f5f5;strokeColor=#666666;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="3620" y="30" width="420" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ct_start" value="/create-test" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="3620" y="90" width="280" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="ct_read" value="Ler o index.md e o plano: escopo, tipo (fix/feat), telas/fluxo envolvidos e o id do card" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="3620" y="180" width="280" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="ct_dec_guard" value="/execute concluído no index?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="3660" y="300" width="200" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="ct_divert" value="Sugerir rodar /execute e encerrar" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="3960" y="180" width="230" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ct_dec_type" value="A alteração é só de API?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="3660" y="430" width="200" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="ct_create_api" value="Criar markdown (pt-BR, leigo): como testar via API — qual endpoint chamar e o retorno esperado" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="3980" y="445" width="240" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="ct_create_ui" value="Criar markdown (pt-BR, leigo e humanizado): &quot;Como testar [x]&quot; — passo a passo pelas telas/fluxo, como um usuário sem conhecimento técnico validaria" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="3620" y="580" width="280" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="ct_comment" value="Entrar no card do Jira (id do plan) e postar o arquivo como comentário (MCP)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="3620" y="730" width="280" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="ct_index" value="Atualizar o index.md: marcar /create-test concluído + horário final" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="3620" y="850" width="280" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="ct_end" value="Fim do /create-test&#10;(guia de teste criado e no card)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="3620" y="960" width="280" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- EDGES FASE 6 -->
+        <mxCell id="ect_start_read" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ct_start" target="ct_read"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ect_read_guard" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ct_read" target="ct_dec_guard"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ect_guard_nao" value="Não" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ct_dec_guard" target="ct_divert"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ect_guard_sim" value="Sim" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ct_dec_guard" target="ct_dec_type"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ect_dec_sim" value="Sim (só API)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ct_dec_type" target="ct_create_api"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ect_dec_nao" value="Não (envolve telas)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ct_dec_type" target="ct_create_ui"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ect_api_comment" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ct_create_api" target="ct_comment"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ect_ui_comment" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ct_create_ui" target="ct_comment"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ect_comment_index" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ct_comment" target="ct_index"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ect_index_end" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ct_index" target="ct_end"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- ===================== FASE AVULSA: /resolve-reviewer ===================== -->
+        <mxCell id="fase6_header" value="FASE AVULSA (sob demanda) — Resolver Reviewer  (/resolve-reviewer)" style="text;html=1;fontStyle=1;fontSize=16;align=left;verticalAlign=middle;fillColor=#ede7f6;strokeColor=#9673a6;rounded=1;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="4300" y="30" width="480" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="rr_start" value="/resolve-reviewer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="4300" y="90" width="280" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="rr_input_link" value="Aguardar o usuário enviar o link da PR&#10;(ex: .../api-vena-core/pull/162)" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="4300" y="180" width="280" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="rr_checkout" value="Entrar na PR; garantir estar na branch correta (checkout) e pull do remote — deixar igual ao remote" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="4300" y="290" width="280" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="rr_read_reviewer" value="Entender a última mensagem deixada pelo reviewer" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="4300" y="430" width="280" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="rr_work_user" value="Trabalhar com o usuário para resolver o que foi pedido pelo reviewer" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="4300" y="540" width="280" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="rr_commit" value="Commit das alterações" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="4300" y="660" width="280" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="rr_sub_review" value="Sub-agent: rodar /code-review novamente" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="4300" y="750" width="280" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="rr_fix_block" value="Resolver os problemas bloqueantes apontados" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="4300" y="850" width="280" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="rr_push" value="Push na PR" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="4300" y="950" width="280" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="rr_dec_ci" value="Os checks do CI passaram novamente?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="4340" y="1050" width="200" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="rr_fix_ci" value="Ajustar o código e novo commit/push até passar nos checks" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="4660" y="1065" width="230" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="rr_respond" value="Responder na PR o que foi feito" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="4300" y="1200" width="280" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="rr_mark" value="Marcar a PR para review novamente" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="4300" y="1300" width="280" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="rr_index" value="Registrar no index.md esta rodada de resolve-reviewer (nº da rodada + horário)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="4300" y="1400" width="280" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="rr_end" value="Fim do /resolve-reviewer&#10;(PR de volta para review)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="4300" y="1520" width="280" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- EDGES FASE AVULSA -->
+        <mxCell id="e6_start_link" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="rr_start" target="rr_input_link"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e6_link_checkout" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="rr_input_link" target="rr_checkout"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e6_checkout_read" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="rr_checkout" target="rr_read_reviewer"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e6_read_work" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="rr_read_reviewer" target="rr_work_user"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e6_work_commit" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="rr_work_user" target="rr_commit"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e6_commit_review" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="rr_commit" target="rr_sub_review"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e6_review_fix" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="rr_sub_review" target="rr_fix_block"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e6_fix_push" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="rr_fix_block" target="rr_push"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e6_push_ci" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="rr_push" target="rr_dec_ci"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e6_ci_nao" value="Não" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="rr_dec_ci" target="rr_fix_ci"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e6_fixci_loop" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="rr_fix_ci" target="rr_dec_ci"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e6_ci_sim" value="Sim" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="rr_dec_ci" target="rr_respond"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e6_respond_mark" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="rr_respond" target="rr_mark"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e6_mark_index" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="rr_mark" target="rr_index"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e6_index_end" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="rr_index" target="rr_end"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- ===================== SEQUÊNCIA ENTRE FASES ===================== -->
+        <mxCell id="e_fase1_fase2" value="comando seguinte" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;strokeColor=#999999;fontColor=#666666;" edge="1" parent="1" source="s_end" target="es_start"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_fase2_fase3" value="comando seguinte" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;strokeColor=#999999;fontColor=#666666;" edge="1" parent="1" source="es_end" target="bp_start"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_fase3_fase4" value="comando seguinte" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;strokeColor=#999999;fontColor=#666666;" edge="1" parent="1" source="bp_end" target="cd_start"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_fase4_fase5" value="comando seguinte" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;strokeColor=#999999;fontColor=#666666;" edge="1" parent="1" source="cd_end" target="ex_start"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_fase5_fase6" value="comando seguinte" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;strokeColor=#999999;fontColor=#666666;" edge="1" parent="1" source="ex_end" target="ct_start"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_avulso_resolve" value="avulso: sempre que o reviewer deixar feedback na PR" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;strokeColor=#9673a6;fontColor=#9673a6;dashPattern=1 4;" edge="1" parent="1" source="ct_end" target="rr_start"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

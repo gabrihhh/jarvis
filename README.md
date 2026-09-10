@@ -1,6 +1,6 @@
 # jarvis
 
-Terminal dashboard, status bar e grafo de memória semântica para o **Claude Code** — 100% local.
+Terminal dashboard e status bar de uso de tokens para o **Claude Code** — 100% local.
 
 ---
 
@@ -24,14 +24,9 @@ Reinicie o Claude Code após o setup.
 | `jarvis` | Mostra a versão |
 | `jarvis --usage` | Dashboard completo de uso (tokens e custo) |
 | `jarvis --watch` | Dashboard com auto-refresh a cada 30s |
-| `jarvis --setup` | Configura status bar, instala slash commands e define trigger padrão |
-| `jarvis --graph` | Abre o Neo4j Browser em localhost:7474 |
-| `jarvis --trigger` | Mostra o modo de trigger atual |
-| `jarvis --trigger session` | Hook de memória roda uma vez por sessão *(padrão)* |
-| `jarvis --trigger prompt` | Hook de memória roda a cada prompt |
-| `jarvis --trigger off` | Desativa o carregamento automático de memória |
+| `jarvis --setup` | Configura status bar e instala os slash commands |
 | `jarvis --theme` | Mostra o tema atual da status bar |
-| `jarvis --theme <name>:<#hex>` | Define a cor de um box (`context`, `trigger`, `memory`, `tokens`) |
+| `jarvis --theme <name>:<#hex>` | Define a cor de um box (`context`, `tokens`) |
 | `jarvis --theme <name>:reset` | Reseta a cor de um box para o padrão |
 | `jarvis --theme reset` | Reseta todas as cores para o padrão |
 | `jarvis --token` | Mostra o modo de exibição de tokens atual |
@@ -41,16 +36,9 @@ Reinicie o Claude Code após o setup.
 | `jarvis --line` | Saída de uma linha usada internamente pela status bar |
 | `jarvis --help` | Lista todos os comandos |
 
-**Slash commands** *(dentro do Claude Code — instalados por `jarvis --setup`)*:
+**Slash commands** *(dentro do Claude Code)*:
 
-| Comando | Descrição |
-|---|---|
-| `/setup-memory` | Sobe Neo4j via Docker e registra o MCP server |
-| `/create-memory` | Indexa um repositório no grafo de memória (primeira vez) |
-| `/update-memory` | Atualiza o grafo com as mudanças recentes do repositório |
-| `/configure-memory` | Personaliza o schema, regras e fluxos da arquitetura de memória |
-| `/reset-folder` | Reseta todos os repos filhos para um branch (`qa`/`main`), tratando alterações interativamente |
-| `/folder-submit` | Cria branches, commita e faz push das alterações de todos os repos filhos |
+`jarvis --setup` copia todo arquivo `.md` presente na pasta `slash/` deste pacote para `~/.claude/commands/`, registrando-os como slash commands globais. A pasta vem vazia por padrão — adicione seus próprios `.md` e rode `jarvis --setup` novamente.
 
 ---
 

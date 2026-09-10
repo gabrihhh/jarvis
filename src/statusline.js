@@ -1,10 +1,8 @@
 import { Chalk } from 'chalk';
-import { readFileSync, existsSync, unlinkSync } from 'fs';
-import { join } from 'path';
-import { homedir, tmpdir } from 'os';
 import { readAllUsage, getCurrentSessionFile, readCurrentSessionUsage } from './reader.js';
 import { aggregateStats, aggregateSession, getLastTurnTokens, formatTokens } from './calculator.js';
 import { readTheme } from './theme.js';
+import { readConfig } from './config.js';
 
 const chalk = new Chalk({ level: 3 });
 
@@ -14,18 +12,8 @@ function bar(percent, width = 8) {
   return '█'.repeat(filled) + '░'.repeat(empty);
 }
 
-function readTriggerMode() {
-  try {
-    const cfg = JSON.parse(readFileSync(join(homedir(), '.claude-memory.json'), 'utf8'));
-    return cfg.trigger || 'session';
-  } catch { return 'off'; }
-}
-
 function readTokenMode() {
-  try {
-    const cfg = JSON.parse(readFileSync(join(homedir(), '.claude-memory.json'), 'utf8'));
-    return cfg.tokenDisplay || 'off';
-  } catch { return 'off'; }
+  return readConfig().tokenDisplay || 'off';
 }
 
 function buildBox(inner, color, width = inner.length) {
@@ -42,39 +30,17 @@ function joinBoxes(...boxes) {
          boxes[0][2] + boxes.slice(1).map(b => b[2]).join('');
 }
 
-const MEMORY_LOCK_STALE_MS = 5 * 60 * 1000; // 5 min — ignora locks de sessões mortas
-
-function isMemoryLoaded(sessionId) {
-  if (!sessionId) return false;
-  const lockPath = join(tmpdir(), `jarvis-memory-${sessionId}.lock`);
-  if (!existsSync(lockPath)) return false;
-  try {
-    const ts = new Date(readFileSync(lockPath, 'utf8').trim()).getTime();
-    if (Date.now() - ts > MEMORY_LOCK_STALE_MS) {
-      try { unlinkSync(lockPath); } catch { /* ignore */ }
-      return false;
-    }
-    unlinkSync(lockPath); // consome o lock: ícone aparece só uma vez
-    return true;
-  } catch { return false; }
-}
-
 export function renderLine() {
-  const mode = readTriggerMode();
   const tokenMode = readTokenMode();
   const theme = readTheme();
 
   const sessionMeta = getCurrentSessionFile();
   const sessionId = sessionMeta?.sessionId;
-  const loaded = isMemoryLoaded(sessionId);
-  const loadedBox = loaded ? buildBox(' ⬡  ', theme.memory, 4) : null;
 
   const allEntries = readAllUsage();
 
   const buildOutput = (contextBox, turnTokens) => {
     const toJoin = [contextBox];
-    if (mode !== 'off') toJoin.push(buildBox(` TRIGGER ${mode.toUpperCase()} `, theme.trigger));
-    if (loadedBox) toJoin.push(loadedBox);
     if (turnTokens) toJoin.push(buildBox(` ◈ ${formatTokens(turnTokens.total)} `, theme.tokens));
 
     let out = joinBoxes(...toJoin);
