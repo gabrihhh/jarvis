@@ -38,7 +38,21 @@ Reinicie o Claude Code após o setup.
 
 **Slash commands** *(dentro do Claude Code)*:
 
-`jarvis --setup` copia todo arquivo `.md` presente na pasta `slash/` deste pacote para `~/.claude/commands/`, registrando-os como slash commands globais. A pasta vem vazia por padrão — adicione seus próprios `.md` e rode `jarvis --setup` novamente.
+`jarvis --setup` copia todo arquivo `.md` da pasta `slash/` deste pacote para `~/.claude/commands/`, registrando-os como slash commands globais. Você pode adicionar seus próprios `.md` e rodar `jarvis --setup` novamente.
+
+O jarvis já inclui um **fluxo de desenvolvimento de software com IA** — do setup à PR pronta para review. São 6 fases lineares (cada uma checa se a anterior foi concluída) + 1 fase avulsa. Um `index.md` por plano (em `plans/plan-N/`) funciona como painel de progresso que costura todos os comandos.
+
+| Comando | Fase | O que faz |
+|---|---|---|
+| `/setup` | 1 | Verifica MCP do Jira e GitHub CLI, identifica o monorepo e classifica as pastas em API/front — salva em `.claude/estrutura.md` |
+| `/scope` | 2 | Sincroniza a branch (main/qa) com o remote, mapeia o fluxo front→API, tira todas as dúvidas, cria e revisa a especificação (com cenários de teste) e salva em `plans/plan-N/` |
+| `/blueprint` | 3 | Gera o planejamento técnico de implementação (incluindo os testes a criar) a partir da spec |
+| `/card` | 4 | Cria o card no Jira via MCP — título padronizado, descrição do plano, status, assignee e comentário do tempo de escopo |
+| `/execute` | 5 | Cria a branch em cada repo, implementa código **e** testes, roda `/code-review`, abre a PR (linguagem leiga) e acompanha o CI até passar |
+| `/create-test` | 6 | Cria um guia de teste leigo (pt-BR) explicando como validar a alteração e posta como comentário no card |
+| `/resolve-reviewer` | avulso | Resolve o feedback deixado por um reviewer na PR, garante o CI verde e devolve a PR para review |
+
+> O desenho completo do fluxo está em [`docs/fluxo-desenvolvimento-ia.drawio`](docs/fluxo-desenvolvimento-ia.drawio) e o template do painel em [`docs/index-template.md`](docs/index-template.md).
 
 ---
 
