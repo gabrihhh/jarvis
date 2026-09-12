@@ -46,21 +46,37 @@ Extraia: `BRANCH` (headRefName), o **repositório** (owner/repo) e o número da 
 
 ---
 
-## Passo 2 — Localizar o plan e sincronizar com o remote
+## Passo 2 — Localizar o plan/workspace e sincronizar com o remote
 
-`MONOREPO` vem do `.claude/estrutura.md`. Encontre a pasta local do repositório da PR e o **plan** correspondente (pela branch / id do card):
+`MONOREPO` vem do `.claude/estrutura.md`. Encontre o **plan** correspondente (pela branch / id do card):
 
 ```bash
 CARD_ID="${BRANCH##*/}"    # última parte da branch, ex: VENA-223
 grep -rl "$CARD_ID" "$MONOREPO"/plans/*/index.md 2>/dev/null
 ```
 
-Guarde `plan-N` do plano correspondente.
+Guarde `plan-N` e leia no `index.md` o **Workspace** do plano (`$WORKSPACE = $MONOREPO/.worktrees/plan-N`). O `/execute` trabalha em **worktrees por plano**, então o código da PR está em `$WORKSPACE/<repo>`, **não** na cópia principal.
 
-No repositório local da PR, deixe a branch **igual ao remote**:
+Determine o diretório de trabalho da PR (`REPO_DIR`):
 
 ```bash
-cd "<repo-local>"
+REPO="<nome-da-pasta-do-repo-da-PR>"     # ex.: api-vena-core
+REPO_DIR="$WORKSPACE/$REPO"
+```
+
+- Se `$REPO_DIR` **existir**, use-o.
+- Se **não existir** (workspace já limpo, ou plano antigo pré-worktrees): **recrie o worktree** a partir do branch remoto —
+  ```bash
+  mkdir -p "$WORKSPACE"
+  git -C "$MONOREPO/$REPO" fetch origin --quiet
+  git -C "$MONOREPO/$REPO" worktree add "$REPO_DIR" "<BRANCH>"
+  ```
+  Copie os ignorados necessários (`.env*`) da cópia principal e instale as deps (como no Passo 3 do `/execute`).
+
+No worktree da PR, deixe a branch **igual ao remote**:
+
+```bash
+cd "$REPO_DIR"
 git fetch origin --prune
 git checkout "<BRANCH>"
 git reset --hard "origin/<BRANCH>"
@@ -102,7 +118,7 @@ Implemente as mudanças acordadas. Se algo do pedido não estiver claro, **pergu
 Verifique arquivos sensíveis e commite as alterações:
 
 ```bash
-cd "<repo-local>"
+cd "$REPO_DIR"
 git add .
 git commit -m "fix: [<LABEL>] ajustes do review (<CARD_ID>)"
 ```
@@ -111,7 +127,9 @@ git commit -m "fix: [<LABEL>] ajustes do review (<CARD_ID>)"
 
 ## Passo 6 — /code-review + resolver bloqueantes (loop)
 
-Lance um **sub-agent** (Task tool) para rodar o **/code-review** novamente sobre o diff.
+**Só roda se o `/code-review` existir** neste ambiente (mesma checagem do Passo 6 do `/execute`: `.claude/commands/`, `~/.claude/commands/`, plugins, ou skill na sessão). Se **não existir**, avise (`ℹ️ /code-review não encontrado — pulando`) e siga para o Passo 7.
+
+Se existir, lance um **sub-agent** (Task tool) para rodar o **/code-review** novamente sobre o diff.
 
 - Resolva os **problemas bloqueantes** apontados.
 - Commit dos ajustes.
@@ -122,7 +140,7 @@ Lance um **sub-agent** (Task tool) para rodar o **/code-review** novamente sobre
 ## Passo 7 — Push
 
 ```bash
-cd "<repo-local>"
+cd "$REPO_DIR"
 git push origin "<BRANCH>"
 ```
 
@@ -131,6 +149,7 @@ git push origin "<BRANCH>"
 ## Passo 8 — Acompanhar o CI até passar (loop)
 
 ```bash
+cd "$REPO_DIR"
 gh pr checks "<BRANCH>" --watch
 ```
 

@@ -28,8 +28,8 @@
           <mxGeometry x="820" y="318" width="150" height="36" as="geometry" />
         </mxCell>
 
-        <mxCell id="note_index" value="index.md  (em plans/&lt;plan-N&gt;/)  =  PAINEL DE PROGRESSO do plano.&#10;TODA fase escreve nele: status por fase + timestamps, branch alvo, tipo (fix/feat), stack e cenários de teste, organização, id do card, e CADA rodada do /resolve-reviewer (1ª, 2ª, 3ª...).&#10;GUARD: cada fase só roda se a anterior estiver concluída no index." style="shape=note;whiteSpace=wrap;html=1;fillColor=#fff9c4;strokeColor=#d6b656;align=left;verticalAlign=top;size=14;spacing=6;" vertex="1" parent="1">
-          <mxGeometry x="820" y="380" width="300" height="180" as="geometry" />
+        <mxCell id="note_index" value="index.md  (em plans/&lt;plan-N&gt;/)  =  PAINEL DE PROGRESSO do plano.&#10;TODA fase escreve nele: status por fase + timestamps, branch alvo, tipo (fix/feat), stack e cenários de teste, organização, id do card, WORKSPACE (worktrees do plano), e CADA rodada do /resolve-reviewer (1ª, 2ª, 3ª...).&#10;GUARD: cada fase só roda se a anterior estiver concluída no index." style="shape=note;whiteSpace=wrap;html=1;fillColor=#fff9c4;strokeColor=#d6b656;align=left;verticalAlign=top;size=14;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="820" y="380" width="300" height="190" as="geometry" />
         </mxCell>
 
         <!-- ===================== FASE 1: /setup ===================== -->
@@ -101,8 +101,8 @@
         <mxCell id="es_input_branch" value="Perguntar: as alterações serão na main ou em qa?" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
           <mxGeometry x="1130" y="300" width="260" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="es_sub_checkout" value="Sub-agent: em todas as pastas, checkout na branch escolhida + pull. Avisa e pede confirmação antes de descartar qualquer branch/alteração local — a verdade é o remote" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
-          <mxGeometry x="1130" y="400" width="260" height="100" as="geometry" />
+        <mxCell id="es_sub_checkout" value="Sub-agent: preparar/atualizar o worktree-base do alvo (.worktrees/base/(qa|main)/&lt;repo&gt;) = origin/&lt;base&gt;. Cria se não existir, sempre alinha ao remote. NÃO toca a cópia primária nem outros planos. O scope lê o código daqui." style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="1130" y="400" width="260" height="120" as="geometry" />
         </mxCell>
         <mxCell id="es_input_change" value="Perguntar qual alteração será implementada nesta rodada" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
           <mxGeometry x="1130" y="540" width="260" height="60" as="geometry" />
@@ -303,17 +303,23 @@
         <mxCell id="ex_divert" value="Sugerir rodar /card e encerrar" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
           <mxGeometry x="3300" y="180" width="230" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="ex_sub_branch" value="Sub-agent: em cada repositório, a partir da branch base (qa/main), criar a branch:&#10;(fix/feat)/(qa/main)/(id do card)&#10;ex: fix/main/VENA-223" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
-          <mxGeometry x="2960" y="410" width="260" height="110" as="geometry" />
+        <mxCell id="ex_sub_branch" value="Sub-agent: criar o WORKSPACE do plano — em cada repo um git worktree em .worktrees/plan-N/&lt;repo&gt; no branch (fix/feat)/(qa/main)/(card), a partir da base. Copiar .env e auto-install das deps." style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="2960" y="410" width="260" height="120" as="geometry" />
         </mxCell>
-        <mxCell id="ex_note_multi" value="Multi-repo: todos os repositórios usam o MESMO card, a MESMA branch e o MESMO título de commit e PR" style="shape=note;whiteSpace=wrap;html=1;fillColor=#fff9c4;strokeColor=#d6b656;align=left;verticalAlign=top;size=14;" vertex="1" parent="1">
-          <mxGeometry x="3300" y="420" width="230" height="100" as="geometry" />
+        <mxCell id="ex_note_multi" value="Multi-repo: todos usam o MESMO card, branch e título de commit/PR.&#10;Isolamento: cada plano tem seu WORKSPACE (worktrees) → vários planos em paralelo, sem colisão. A cópia principal fica sempre na base." style="shape=note;whiteSpace=wrap;html=1;fillColor=#fff9c4;strokeColor=#d6b656;align=left;verticalAlign=top;size=14;" vertex="1" parent="1">
+          <mxGeometry x="3300" y="410" width="230" height="130" as="geometry" />
         </mxCell>
         <mxCell id="ex_impl" value="Implementar com base em todo o plano — código E os testes e2e/unitários do escopo (usando o stack confirmado, só do novo)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
           <mxGeometry x="2960" y="560" width="260" height="90" as="geometry" />
         </mxCell>
         <mxCell id="ex_commit" value="Commit das alterações (mesmo título em todos os repos)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
           <mxGeometry x="2960" y="680" width="260" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ex_dec_hascr" value="/code-review existe no ambiente?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="3300" y="700" width="200" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="ex_skip_cr" value="Pular o review interno (registrar no index: pulado — ausente) e seguir para a PR" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="3560" y="715" width="230" height="70" as="geometry" />
         </mxCell>
         <mxCell id="ex_sub_review" value="Sub-agent: rodar /code-review sobre o que foi feito (traz o review completo: must-change, suggestions, etc.)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
           <mxGeometry x="2960" y="780" width="260" height="90" as="geometry" />
@@ -336,7 +342,7 @@
         <mxCell id="ex_card_review" value="Mover o card no Jira para 'code-review' (MCP)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
           <mxGeometry x="2960" y="1460" width="260" height="70" as="geometry" />
         </mxCell>
-        <mxCell id="ex_index" value="Atualizar o index.md: marcar /execute concluído + horário final" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+        <mxCell id="ex_index" value="Atualizar o index.md: registrar o WORKSPACE, marcar /execute concluído + horário final" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
           <mxGeometry x="2960" y="1560" width="260" height="80" as="geometry" />
         </mxCell>
         <mxCell id="ex_end" value="Fim do /execute&#10;(PR pronta para review)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
@@ -351,7 +357,10 @@
         <mxCell id="e5_note_link" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;endArrow=none;strokeColor=#d6b656;" edge="1" parent="1" source="ex_note_multi" target="ex_sub_branch"><mxGeometry relative="1" as="geometry" /></mxCell>
         <mxCell id="e5_branch_impl" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ex_sub_branch" target="ex_impl"><mxGeometry relative="1" as="geometry" /></mxCell>
         <mxCell id="e5_impl_commit" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ex_impl" target="ex_commit"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e5_commit_review" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ex_commit" target="ex_sub_review"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e5_commit_hascr" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ex_commit" target="ex_dec_hascr"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e5_hascr_sim" value="Sim" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ex_dec_hascr" target="ex_sub_review"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e5_hascr_nao" value="Não (pular review)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ex_dec_hascr" target="ex_skip_cr"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e5_skipcr_pr" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ex_skip_cr" target="ex_pr"><mxGeometry relative="1" as="geometry" /></mxCell>
         <mxCell id="e5_review_fix" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ex_sub_review" target="ex_fix_review"><mxGeometry relative="1" as="geometry" /></mxCell>
         <mxCell id="e5_fix_dec" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ex_fix_review" target="ex_dec_review"><mxGeometry relative="1" as="geometry" /></mxCell>
         <mxCell id="e5_decreview_nao" value="Não (revisar de novo)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="ex_dec_review" target="ex_sub_review"><mxGeometry relative="1" as="geometry" /></mxCell>
@@ -476,6 +485,22 @@
         <mxCell id="e6_respond_mark" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="rr_respond" target="rr_mark"><mxGeometry relative="1" as="geometry" /></mxCell>
         <mxCell id="e6_mark_index" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="rr_mark" target="rr_index"><mxGeometry relative="1" as="geometry" /></mxCell>
         <mxCell id="e6_index_end" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="rr_index" target="rr_end"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- ===================== UTILITÁRIO: /worktree ===================== -->
+        <mxCell id="wt_header" value="UTILITÁRIO (sob demanda) — Workspaces  (/worktree)" style="text;html=1;fontStyle=1;fontSize=16;align=left;verticalAlign=middle;fillColor=#ede7f6;strokeColor=#9673a6;rounded=1;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="4300" y="1660" width="480" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="wt_start" value="/worktree" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="4300" y="1710" width="280" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="wt_list" value="/worktree (sem args): listar os workspaces ativos — por plano: título, card, branch, estado (limpo/alterado), commits não enviados e estado da PR" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="4300" y="1800" width="280" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="wt_clean" value="/worktree clean plan-N: checar não commitado / não enviado → avisar e confirmar → git worktree remove + prune de cada repo. Card e PR ficam intactos." style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="4640" y="1800" width="280" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="ewt_start_list" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="wt_start" target="wt_list"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ewt_start_clean" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="wt_start" target="wt_clean"><mxGeometry relative="1" as="geometry" /></mxCell>
 
         <!-- ===================== SEQUÊNCIA ENTRE FASES ===================== -->
         <mxCell id="e_fase1_fase2" value="comando seguinte" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;strokeColor=#999999;fontColor=#666666;" edge="1" parent="1" source="s_end" target="es_start"><mxGeometry relative="1" as="geometry" /></mxCell>

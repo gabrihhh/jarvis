@@ -1,6 +1,6 @@
 ---
 name: execute
-description: Implementa a alteração escopada — cria a branch em cada repo, implementa código e testes conforme o plano, roda /code-review interno, commita, abre a PR, acompanha o CI até passar e move o card para code-review
+description: Implementa a alteração escopada — cria a branch em cada repo, implementa código e testes conforme o plano, roda /code-review interno (se existir), commita, abre a PR, acompanha o CI até passar e move o card para code-review
 ---
 
 # /execute — Execução
@@ -19,8 +19,9 @@ description: Implementa a alteração escopada — cria a branch em cada repo, i
 ## REGRA GLOBAL
 
 - **Multi-repo:** todos os repositórios envolvidos usam o **mesmo card**, a **mesma branch** e o **mesmo título de commit e PR**.
+- **Isolamento por plano (worktrees):** cada plano trabalha em seu **próprio workspace** — um `git worktree` por repo em `MONOREPO/.worktrees/plan-N/<repo>`. Isso permite **vários planos em paralelo** no mesmo monorepo sem colisão. A **cópia principal** de cada repo (`MONOREPO/<repo>`) **nunca** é usada pra editar: fica sempre no branch base, livre pros outros planos. **A partir do Passo 3, `<repo>` sempre se refere ao worktree do plano** (`$WORKSPACE/<repo>`), nunca à cópia principal.
 - Implemente **exatamente o plano** (`plano-implementacao.md`) — código **e** os testes e2e/unit do escopo (só do novo).
-- **Não abra a PR** antes do `/code-review` interno passar (must-change resolvidos).
+- **Não abra a PR** antes do `/code-review` interno passar (must-change resolvidos) — **quando o `/code-review` existir**. Se não existir no ambiente, esse passo é **pulado** (ver Passo 6).
 - **Não conclua** antes do **CI verde**.
 - `push` e abertura de PR são ações externas: **peça confirmação uma vez** antes de executá-las.
 - Requer **`gh`** autenticado e **MCP do Jira** conectado.
@@ -45,6 +46,7 @@ Defina:
 - `LABEL` = `MAIN`|`QA`
 - `TITULO_COMMIT_PR` = `[<LABEL>] <tipo>(<CARD_ID>): <título>`
   - ex.: `[MAIN] fix(VENA-223): Otimização da esteira logística`
+- `WORKSPACE` = `$MONOREPO/.worktrees/plan-$N` — a **raiz do workspace** deste plano (criada no Passo 3). Cada repo envolvido fica em `$WORKSPACE/<repo>`.
 
 Registre o início:
 
@@ -71,17 +73,48 @@ Na tabela **Progresso** do `index.md`, verifique `/card`.
 
 ---
 
-## Passo 3 — Criar a branch em cada repositório (sub-agent)
+## Passo 3 — Criar o workspace do plano (worktrees + deps) (sub-agent)
 
-Lance um **sub-agent** (Task tool) para, em **cada repositório envolvido**, a partir da branch base, criar a **mesma** branch de trabalho:
+O plano trabalha num **workspace isolado** (`$WORKSPACE = $MONOREPO/.worktrees/plan-$N`), com **um `git worktree` por repo envolvido** no branch `<BRANCH>`. Isso deixa a cópia principal livre e permite **rodar vários planos ao mesmo tempo**.
+
+Lance um **sub-agent** (Task tool) para, em **cada repositório envolvido**, fazer:
 
 ```bash
-cd "<repo>"
-git fetch origin --quiet
-git checkout -b "<BRANCH>" "origin/<BRANCH_BASE>"
+mkdir -p "$WORKSPACE"
+git -C "$MONOREPO/<repo>" fetch origin --quiet
+
+# cria o worktree no branch de trabalho, a partir da base
+git -C "$MONOREPO/<repo>" worktree add "$WORKSPACE/<repo>" -b "<BRANCH>" "origin/<BRANCH_BASE>"
 ```
 
-Se a branch já existir em algum repo, informe e pergunte (reusar / outro nome). Confirme que **todos** os repos estão na branch `<BRANCH>` antes de seguir.
+Casos especiais:
+- **Worktree já existe** (`$WORKSPACE/<repo>` presente, ex.: re-rodando `/execute` no mesmo plano): **reutilize** — informe e não recrie.
+- **Branch já existe** (local ou remoto): crie o worktree **sem `-b`** (`git -C "$MONOREPO/<repo>" worktree add "$WORKSPACE/<repo>" "<BRANCH>"`) ou pergunte (reusar / outro nome).
+- Se a cópia principal estiver **na** `<BRANCH>` (fluxo antigo), o `worktree add` falha — avise e peça pra voltar a cópia principal pra base.
+
+**Copiar arquivos ignorados necessários** (worktree não traz `.env` nem ignorados). Da cópia principal pro worktree, sem sobrescrever:
+
+```bash
+# .env e variantes (ajuste a lista se o repo usar outros arquivos ignorados)
+for f in "$MONOREPO/<repo>"/.env "$MONOREPO/<repo>"/.env.*; do
+  [ -e "$f" ] && cp -n "$f" "$WORKSPACE/<repo>/" 2>/dev/null || true
+done
+```
+
+**Auto-install das dependências** no worktree (detecta o gerenciador pelo lockfile):
+
+```bash
+cd "$WORKSPACE/<repo>"
+if   [ -f pnpm-lock.yaml ];    then pnpm install --frozen-lockfile
+elif [ -f yarn.lock ];         then yarn install --frozen-lockfile
+elif [ -f package-lock.json ]; then npm ci
+elif [ -f package.json ];      then npm install
+fi
+```
+
+> Repos sem `package.json` (libs de outra stack) não instalam nada — apenas o worktree é criado.
+
+Confirme que **todos** os repos envolvidos têm worktree em `$WORKSPACE/<repo>` no branch `<BRANCH>` antes de seguir. **A partir daqui, `<repo>` = `$WORKSPACE/<repo>`.**
 
 ---
 
@@ -97,11 +130,12 @@ Não desvie do plano. Se surgir algo não previsto que exija decisão, **pare e 
 
 ## Passo 5 — Commit (mesmo título em todos os repos)
 
-Em cada repo com alterações, verifique arquivos sensíveis (`.env`, `*.key`, `*secret*`, etc.) e **bloqueie** se encontrar. Depois:
+Em cada repo com alterações, adicione e verifique o que ficou **staged** — bloqueie se algum arquivo sensível (`.env`, `*.key`, `*secret*`, etc.) estiver prestes a ser commitado (o `.env` copiado no Passo 3 é ignorado pelo git, então não deve aparecer aqui; se aparecer, **bloqueie**):
 
 ```bash
-cd "<repo>"
+cd "$WORKSPACE/<repo>"
 git add .
+git diff --cached --name-only | grep -Ei '(^|/)\.env|\.key$|secret' && echo "⚠️ arquivo sensível staged — bloquear" || true
 git commit -m "<TITULO_COMMIT_PR>"
 ```
 
@@ -110,6 +144,24 @@ O **mesmo** `TITULO_COMMIT_PR` em todos os repositórios.
 ---
 
 ## Passo 6 — /code-review interno + ajustes (loop)
+
+**Primeiro, verifique se o `/code-review` existe neste ambiente.** Ele pode estar em qualquer um destes locais:
+
+```bash
+ls "$MONOREPO/.claude/commands/code-review.md" \
+   ~/.claude/commands/code-review.md \
+   ~/.claude/plugins/marketplaces/*/**/skills/*/code-review* 2>/dev/null
+```
+
+Também vale como "existe" um skill/plugin de code-review disponível na sessão (ex.: `code-review:code-review`).
+
+- Se **não existir** em nenhum lugar: **pule este passo inteiro**. Avise e siga direto para o Passo 7:
+  ```
+  ℹ️ /code-review não encontrado no ambiente — pulando o review interno.
+  ```
+  Registre no `index.md` que o review interno foi pulado (ausente). **Não** bloqueie o fluxo por isso.
+
+- Se **existir**, siga o loop abaixo.
 
 Lance um **sub-agent** (Task tool) para rodar o **/code-review** sobre o que foi feito (o diff de todos os repos). Ele retorna os achados classificados (**must-change**, **suggestions**, etc.).
 
@@ -140,7 +192,7 @@ Confirma push + PR? (sim / ajustar)
 Ao confirmar, para **cada** repositório:
 
 ```bash
-cd "<repo>"
+cd "$WORKSPACE/<repo>"
 git push -u origin "<BRANCH>"
 gh pr create --base "<BRANCH_BASE>" --head "<BRANCH>" \
   --title "<TITULO_COMMIT_PR>" \
@@ -156,7 +208,7 @@ A **descrição da PR** deve explicar, em **linguagem leiga**, o que foi feito (
 Para cada PR, acompanhe os checks do CI (polling até concluir):
 
 ```bash
-cd "<repo>"
+cd "$WORKSPACE/<repo>"
 gh pr checks "<BRANCH>" --watch
 ```
 
@@ -181,6 +233,7 @@ date '+%Y-%m-%d %H:%M'
 Guarde como `FIM_EXEC`.
 
 No `index.md` do plan:
+- registre o **Workspace**: `$WORKSPACE` (raiz dos worktrees deste plano);
 - preencha **PR** com a(s) URL(s);
 - marque a fase `/execute` como `✅ concluído` (Início = `INICIO_EXEC`, Fim = `FIM_EXEC`).
 
@@ -192,6 +245,7 @@ No `index.md` do plan:
 ✅ /execute concluído
 
   Plano:    plan-N — <título>
+  Workspace: <WORKSPACE>
   Branch:   <BRANCH>
   Commit/PR: <TITULO_COMMIT_PR>
   PRs:      <urls>
@@ -201,4 +255,5 @@ No `index.md` do plan:
 
 Próximo passo: rode /create-test para gerar o guia de teste leigo.
 (Se o reviewer deixar feedback na PR, use /resolve-reviewer.)
+(Quando o plano fechar, rode /worktree clean plan-N para remover o workspace.)
 ```

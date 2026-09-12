@@ -18,7 +18,8 @@ Sem argumentos. É a **FASE 2** do fluxo (depois de `/setup`). Entende a fundo o
 ## REGRA GLOBAL
 
 - Esta fase **não implementa código** — só entende, decide e especifica.
-- No sync de branch, **a verdade é o remote**: qualquer branch/alteração local é descartada — mas **só após avisar e o usuário confirmar**.
+- **Nunca toca na cópia primária** (`MONOREPO/<repo>`) nem no trabalho de outros planos. O `/scope` lê o código de um **worktree-base dedicado** do alvo (`main` ou `qa`), em `MONOREPO/.worktrees/base/<base>/<repo>`.
+- No sync, **a verdade é o remote**: o worktree-base é sempre alinhado a `origin/<base>` (é um checkout só do `/scope`, ninguém edita nele — por isso não há risco de perder trabalho seu).
 - **Sem limite de perguntas**: só avance quando tiver **100% de certeza** do que o usuário quer.
 - Nada é salvo em `plans/` antes da spec estar **aprovada** e com **todos os gaps fechados**.
 - Se travar — erro, ambiguidade, comando indisponível — **pare e pergunte**.
@@ -68,47 +69,42 @@ Guarde `BRANCH_BASE` (`main`|`qa`) e `LABEL` (`MAIN`|`QA`).
 
 ---
 
-## Passo 3 — Sincronizar a branch em todas as pastas (verdade = remote)
+## Passo 3 — Preparar/atualizar o worktree-base do alvo (qa/main)
 
-Liste os repositórios git de primeiro nível do monorepo:
+O `/scope` lê o código a partir de um **worktree-base permanente** do alvo escolhido — `MONOREPO/.worktrees/base/<BRANCH_BASE>/<repo>` — sempre alinhado a `origin/<BRANCH_BASE>`. A **cópia primária não é tocada** e os worktrees dos outros planos não são afetados, então dá pra escopar `main` e `qa` de forma independente.
+
+Defina a raiz do base e liste os repos git de primeiro nível:
 
 ```bash
+BASE="$MONOREPO/.worktrees/base/<BRANCH_BASE>"
+mkdir -p "$BASE"
 for d in "$MONOREPO"/*/; do
-  test -d "$d/.git" && echo "$d"
+  test -d "$d/.git" && basename "$d"
 done
 ```
 
-Para cada repo, verifique se há algo local a descartar:
+Lance um **sub-agent** (Task tool) para, em **cada repo**, criar (se ainda não existir) e **atualizar** o worktree-base — a verdade é o remote:
 
 ```bash
-cd "<repo>" && git fetch origin --quiet && git status --short && git branch --show-current
+PRIMARY="$MONOREPO/<repo>"
+BASE_REPO="$BASE/<repo>"
+git -C "$PRIMARY" fetch origin --prune --quiet
+
+if [ -e "$BASE_REPO/.git" ]; then
+  # já existe → apenas alinhar ao remote (checkout dedicado, nada do usuário vive aqui)
+  git -C "$BASE_REPO" reset --hard "origin/<BRANCH_BASE>"
+  git -C "$BASE_REPO" clean -fd
+else
+  # criar. Se a cópia primária estiver NA base branch, ela impede o worktree — destaque-a (sem perda: só move o HEAD)
+  [ "$(git -C "$PRIMARY" symbolic-ref --quiet --short HEAD 2>/dev/null)" = "<BRANCH_BASE>" ] \
+    && git -C "$PRIMARY" checkout --detach --quiet
+  git -C "$PRIMARY" worktree add -B "<BRANCH_BASE>" "$BASE_REPO" "origin/<BRANCH_BASE>"
+fi
 ```
 
-Monte um resumo do que será **descartado** (branches locais não enviadas, arquivos modificados/não commitados) e **peça confirmação explícita**:
+> O worktree-base é **só de leitura** para o `/scope` (mapear o fluxo) — **não** precisa de `npm install`.
 
-```
-⚠️ Vou alinhar todos os repositórios com o remote na branch "<BRANCH_BASE>".
-Isto DESCARTA o que está local:
-
-  api-vena-core   → 2 arquivos modificados, branch local "wip-teste"
-  front-vena      → limpo
-
-Confirma descartar o local e deixar tudo igual ao remote? (sim / não)
-```
-
-- Se o usuário **não confirmar**, pergunte como proceder (ou encerre).
-- Se **confirmar**, lance um **sub-agent** (Task tool) para executar em cada repo, em paralelo:
-
-  ```bash
-  cd "<repo>"
-  git fetch origin --prune
-  git checkout "<BRANCH_BASE>"
-  git reset --hard "origin/<BRANCH_BASE>"
-  git clean -fd
-  git pull --ff-only origin "<BRANCH_BASE>"
-  ```
-
-  O sub-agent retorna o status final de cada repo. Confirme que todos estão em `origin/<BRANCH_BASE>` atualizados antes de seguir.
+O sub-agent retorna o status final de cada `BASE_REPO`. Confirme que todos estão em `origin/<BRANCH_BASE>` atualizados antes de seguir. **A partir daqui, leia o código dos repos em `$BASE/<repo>`.**
 
 ---
 
@@ -139,9 +135,9 @@ Essa alteração é:
 
 ## Passo 6 — Mapear o fluxo real (front → API)
 
-Usando a classificação do `.claude/estrutura.md`, entre pela **pasta de frontend** e siga o fluxo até a **API** para entender exatamente onde a alteração acontece:
+Usando a classificação do `.claude/estrutura.md`, entre pela **pasta de frontend** (no worktree-base: `$BASE/<FRONTEND>`) e siga o fluxo até a **API** (`$BASE/<repo-api>`) para entender exatamente onde a alteração acontece:
 
-- No `FRONTEND`, localize a tela/componente/serviço relacionado à descrição do usuário.
+- No `$BASE/<FRONTEND>`, localize a tela/componente/serviço relacionado à descrição do usuário.
 - Siga as chamadas HTTP até o(s) repo(s) de **api** e mapeie o endpoint/serviço/entidade envolvidos.
 - Anote os arquivos e camadas que provavelmente serão tocados (só para entendimento — não altere nada).
 
@@ -152,7 +148,7 @@ Usando a classificação do `.claude/estrutura.md`, entre pela **pasta de fronte
 Detecte o stack de teste nos repositórios envolvidos:
 
 ```bash
-cat "<repo>/package.json" 2>/dev/null | grep -E '"(jest|vitest|mocha|@playwright/test|cypress|karma|jasmine)"'
+cat "$BASE/<repo>/package.json" 2>/dev/null | grep -E '"(jest|vitest|mocha|@playwright/test|cypress|karma|jasmine)"'
 ```
 
 Pistas: `jest`/`vitest`/`mocha` (unit) · `@playwright/test`/`cypress` (e2e) · `karma`+`jasmine` (Angular unit).
