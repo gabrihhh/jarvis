@@ -2,49 +2,71 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import { homedir } from 'os';
 
-// Pricing per million tokens (USD) - April 2026
+// Pricing per million tokens (USD) — keyed by model family prefix so new
+// point releases (opus-4-8, opus-4-9…) are priced correctly without edits.
 const PRICING = {
-  'claude-opus-4-6':    { input: 15.00, output: 75.00, cacheRead: 1.50,  cacheWrite: 18.75 },
-  'claude-sonnet-4-6':  { input:  3.00, output: 15.00, cacheRead: 0.30,  cacheWrite:  3.75 },
-  'claude-haiku-4-5':   { input:  0.25, output:  1.25, cacheRead: 0.025, cacheWrite:  0.30 },
-  'default':            { input:  3.00, output: 15.00, cacheRead: 0.30,  cacheWrite:  3.75 },
+  'claude-opus':   { input: 15.00, output: 75.00, cacheRead: 1.50,  cacheWrite: 18.75 },
+  'claude-sonnet': { input:  3.00, output: 15.00, cacheRead: 0.30,  cacheWrite:  3.75 },
+  'claude-haiku':  { input:  0.25, output:  1.25, cacheRead: 0.025, cacheWrite:  0.30 },
+  'default':       { input:  3.00, output: 15.00, cacheRead: 0.30,  cacheWrite:  3.75 },
 };
 
-// Context window sizes per model
+// Native context window sizes per model family (prefix match).
 const CONTEXT_WINDOWS = {
-  'claude-opus-4-6':   200000,
-  'claude-sonnet-4-6': 200000,
-  'claude-haiku-4-5':  200000,
-  'default':           200000,
+  'claude-opus':   200000,
+  'claude-sonnet': 200000,
+  'claude-haiku':  200000,
+  'default':       200000,
 };
 
 // Models that support extended context (1M tokens)
 const EXTENDED_CONTEXT = 1_000_000;
 
+function baseWindow(model) {
+  for (const [key, size] of Object.entries(CONTEXT_WINDOWS)) {
+    if (key !== 'default' && model.startsWith(key)) return size;
+  }
+  return CONTEXT_WINDOWS.default;
+}
+
 /**
- * Reads ~/.claude/settings.json to detect if the user configured an extended
- * context model (e.g. "opus[1m]").  Returns the effective context window size
- * for the given model string.
+ * Returns the effective context window for a model string.
+ *
+ * Detection order (most reliable first):
+ *   1. The model string itself carries the `[1m]` marker
+ *      (e.g. Claude Code's per-session model id "claude-opus-4-8[1m]").
+ *   2. ~/.claude/settings.json global default configures `[1m]` AND the
+ *      configured family matches the model being measured.
+ *   3. Native window for the family (200k).
+ *
+ * Step 1 resolves the ambiguity where the JSONL logs the same bare string
+ * ("claude-opus-4-8") for both 200k and 1M sessions — the global settings
+ * default can't tell a per-session `/model` override apart.
  */
 export function getContextWindow(model) {
-  const base = CONTEXT_WINDOWS[model] || CONTEXT_WINDOWS.default;
+  const m = model || '';
+
+  // 1) explicit per-session marker — authoritative
+  if (m.includes('[1m]')) return EXTENDED_CONTEXT;
+
+  // 2) global default from settings.json (fallback when the session model
+  //    string is bare and can't self-report the extended window)
   try {
     const settingsPath = join(homedir(), '.claude', 'settings.json');
     const settings = JSON.parse(readFileSync(settingsPath, 'utf8'));
     const configured = settings.model || '';
-    // settings.model can be e.g. "opus[1m]", "sonnet[1m]"
     if (configured.includes('[1m]')) {
-      // Check if the configured model matches the one we're measuring
       const shortName = configured.replace(/\[.*\]/, '').trim();
-      if (model.includes(shortName)) return EXTENDED_CONTEXT;
+      if (shortName && m.includes(shortName)) return EXTENDED_CONTEXT;
     }
-  } catch { /* settings unreadable — use default */ }
-  return base;
+  } catch { /* settings unreadable — use native window */ }
+
+  return baseWindow(m);
 }
 
 function getPrice(model) {
   for (const [key, price] of Object.entries(PRICING)) {
-    if (model.startsWith(key)) return price;
+    if (key !== 'default' && model.startsWith(key)) return price;
   }
   return PRICING.default;
 }
@@ -107,11 +129,13 @@ export function aggregateStats(entries) {
   return { monthly: monthlyStats, weekly: weeklyStats, daily: dailyStats, dominantModel };
 }
 
-export function aggregateSession(entries) {
+export function aggregateSession(entries, modelOverride = null) {
   if (!entries.length) return null;
 
   const last = entries[entries.length - 1];
-  const model = last?.model || 'claude-sonnet-4-6';
+  // Prefer the real per-session model id (from Claude Code's statusline stdin
+  // payload) — it can carry the `[1m]` marker that the JSONL strips off.
+  const model = modelOverride || last?.model || 'claude-sonnet-4-6';
   const contextWindow = getContextWindow(model);
 
   // last assistant turn shows cumulative context usage via cache tokens

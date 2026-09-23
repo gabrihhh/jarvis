@@ -1,3 +1,4 @@
+import { readFileSync } from 'fs';
 import { Chalk } from 'chalk';
 import { readAllUsage, getCurrentSessionFile, readCurrentSessionUsage } from './reader.js';
 import { aggregateStats, aggregateSession, getLastTurnTokens, formatTokens } from './calculator.js';
@@ -14,6 +15,25 @@ function bar(percent, width = 8) {
 
 function readTokenMode() {
   return readConfig().tokenDisplay || 'off';
+}
+
+/**
+ * Claude Code pipes a JSON payload to the statusline command on stdin,
+ * including the real per-session model (`model.id`, e.g.
+ * "claude-opus-4-8[1m]"). Reading it is the reliable way to know whether the
+ * current session is using the extended 1M window vs a smaller one.
+ *
+ * Guarded so a manual `jarvis --line` in a TTY never blocks waiting on stdin.
+ */
+function readStdinPayload() {
+  try {
+    if (process.stdin.isTTY) return null;
+    const raw = readFileSync(0, 'utf8');
+    if (!raw.trim()) return null;
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
 }
 
 function buildBox(inner, color, width = inner.length) {
@@ -34,8 +54,11 @@ export function renderLine() {
   const tokenMode = readTokenMode();
   const theme = readTheme();
 
+  const payload = readStdinPayload();
+  const sessionModel = payload?.model?.id || null;
+
   const sessionMeta = getCurrentSessionFile();
-  const sessionId = sessionMeta?.sessionId;
+  const sessionId = sessionMeta?.sessionId || payload?.session_id;
 
   const allEntries = readAllUsage();
 
@@ -66,7 +89,7 @@ export function renderLine() {
   }
 
   const sessionEntries = sessionId ? readCurrentSessionUsage(sessionId) : [];
-  const session = aggregateSession(sessionEntries);
+  const session = aggregateSession(sessionEntries, sessionModel);
   const turnTokens = tokenMode !== 'off' ? getLastTurnTokens(sessionEntries) : null;
 
   if (!session) {
