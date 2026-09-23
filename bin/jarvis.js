@@ -34,6 +34,9 @@ if (args.includes('--help') || args.includes('-h')) {
     jarvis --token on            Show total tokens box (◈)
     jarvis --token complete      Show token box + INPUT/HISTORY/CACHE/RESPONSE breakdown
     jarvis --token off           Disable token display
+    jarvis --kanban              Open the dev-flow kanban board (localhost)
+    jarvis --kanban-setup        Provision the kanban (node-pty runtime + status hooks)
+    jarvis --attach <plan-N>     Attach the terminal to a card's session
     jarvis --help                Show this help
 
   Slash commands: --setup instala no ~/.claude/commands/ todo .md
@@ -74,7 +77,8 @@ if (args.includes('--setup')) {
     console.log('  · No slash commands to install');
   }
 
-  console.log('\n  Restart Claude Code to activate.\n');
+  console.log('\n  Restart Claude Code to activate.');
+  console.log('  Para o kanban, rode também: jarvis --kanban-setup\n');
 } else if (args.includes('--theme')) {
   const { Chalk } = await import('chalk');
   const chalk = new Chalk({ level: 3 });
@@ -152,6 +156,33 @@ if (args.includes('--setup')) {
 
   const labels = { simple: 'on (◈ total tokens)', off: 'off', complete: 'complete (breakdown)' };
   console.log(`\n  ✓ Token display set to: ${labels[cfg.tokenDisplay]}\n`);
+  process.exit(0);
+} else if (args.includes('--kanban-setup')) {
+  const { setupKanban } = await import('../src/kanban/setup.js');
+  setupKanban();
+} else if (args.includes('--kanban')) {
+  // Gate: valida se o kanban foi configurado (node-pty + hooks). Se não, orienta.
+  const { kanbanConfigured } = await import('../src/kanban/setup.js');
+  const cfg = kanbanConfigured();
+  if (!cfg.ok) {
+    console.error(`\n  ⚠ O kanban ainda não está configurado (faltando: ${cfg.missing.join(', ')}).`);
+    console.error('  Para usar, rode antes:  jarvis --kanban-setup\n');
+    process.exit(1);
+  }
+  const { startKanban } = await import('../src/kanban/server.js');
+  await startKanban({ cwd: process.cwd() });
+  // server fica vivo; não chamar process.exit
+} else if (args.includes('--attach')) {
+  const card = args[args.indexOf('--attach') + 1];
+  const { attach } = await import('../src/kanban/attach.js');
+  attach(card, { cwd: process.cwd() });
+  // cliente fica vivo até detach/encerrar
+} else if (args.includes('--hook')) {
+  // Chamado pelo Claude Code (Notification/Stop). Reporta o status do card ao
+  // server do kanban. Silencioso e rápido — nunca deve travar a sessão.
+  const event = args[args.indexOf('--hook') + 1];
+  const { reportHook } = await import('../src/kanban/hooks.js');
+  await reportHook(event);
   process.exit(0);
 } else if (args.includes('--line') || args.includes('-l')) {
   renderLine();

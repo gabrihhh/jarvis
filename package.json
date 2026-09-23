@@ -1,7 +1,7 @@
 {
   "name": "@gabrihhh/jarvis",
-  "version": "3.1.1",
-  "description": "Claude Code terminal dashboard + real-time status bar",
+  "version": "3.2.0",
+  "description": "Claude Code terminal dashboard, real-time status bar + dev-flow kanban",
   "bin": {
     "jarvis": "bin/jarvis.js"
   },
@@ -26,6 +26,9 @@
   "license": "MIT",
   "dependencies": {
     "chalk": "^5.3.0"
+  },
+  "devDependencies": {
+    "node-pty": "^1.1.0"
   },
   "type": "module",
   "engines": {

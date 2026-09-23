@@ -43,7 +43,7 @@ git -C "$WT" status --porcelain | wc -l            # nº de arquivos alterados (
 git -C "$WT" log --oneline @{upstream}.. 2>/dev/null | wc -l   # commits não enviados
 ```
 
-Enriqueça com o `index.md` de cada plan (`título`, `card`, fase atual) e, se útil, o estado da PR (`gh pr view "<BRANCH>" --json state,url` de dentro do worktree).
+Enriqueça com o `index.json` de cada plan (`title`, `jira`, fase atual via `phases`) e, se útil, o estado da PR (`gh pr view "<BRANCH>" --json state,url` de dentro do worktree).
 
 Apresente uma tabela:
 
@@ -70,7 +70,7 @@ Se não houver nenhum workspace, informe `Nenhum workspace ativo.` e encerre.
 test -d "$MONOREPO/.worktrees/plan-N" && echo "OK" || echo "não existe"
 ```
 
-Se não existir, avise e encerre. Leia o `index.md` do plan para contexto (título, card, PR).
+Se não existir, avise e encerre. Leia o `index.json` do plan para contexto (`title`, `jira`, `pr`).
 
 ### 2. Checar trabalho pendente (por repo)
 
@@ -115,9 +115,9 @@ Depois, remova a pasta-raiz do plano se tiver ficado vazia:
 rmdir "$MONOREPO/.worktrees/plan-N" 2>/dev/null || true
 ```
 
-### 4. Registrar no `index.md`
+### 4. Registrar no `index.json`
 
-Adicione uma nota no `index.md` do plan de que o workspace foi removido (com data), sem apagar o histórico:
+Faça **read-modify-write** no `index.json` do plan registrando que o workspace foi removido (com data), sem apagar o resto — ex.: `workspace.removedAt = "<data>"`:
 
 ```bash
 date '+%Y-%m-%d %H:%M'

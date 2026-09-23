@@ -1,6 +1,6 @@
 ---
 name: resolve-reviewer
-description: Resolve o feedback deixado por um reviewer numa PR — sincroniza a branch com o remote, entende o pedido, resolve com o usuário, roda /code-review, garante o CI verde, responde na PR, marca para review de novo e registra a rodada no index.md
+description: Resolve o feedback deixado por um reviewer numa PR — sincroniza a branch com o remote, entende o pedido, resolve com o usuário, roda /code-review, garante o CI verde, responde na PR, marca para review de novo e registra a rodada no index.json
 ---
 
 # /resolve-reviewer — Resolver Feedback do Reviewer
@@ -22,7 +22,7 @@ description: Resolve o feedback deixado por um reviewer numa PR — sincroniza a
 - Resolva o pedido **junto com o usuário** — não invente o que o reviewer quis dizer.
 - **Não marque a PR para review de novo** antes do **CI verde**.
 - Requer **`gh`** autenticado.
-- **Nunca sobrescreva** o histórico de rodadas no `index.md` — sempre **adicione** uma linha.
+- **Nunca sobrescreva** as rodadas no `index.json` — sempre **adicione** um item em `reviewRounds` (read-modify-write, preservando o resto).
 - Se travar — link inválido, PR não encontrada, pedido ambíguo — **pare e pergunte**.
 
 ---
@@ -52,10 +52,10 @@ Extraia: `BRANCH` (headRefName), o **repositório** (owner/repo) e o número da 
 
 ```bash
 CARD_ID="${BRANCH##*/}"    # última parte da branch, ex: VENA-223
-grep -rl "$CARD_ID" "$MONOREPO"/plans/*/index.md 2>/dev/null
+grep -rl "$CARD_ID" "$MONOREPO"/plans/*/index.json 2>/dev/null
 ```
 
-Guarde `plan-N` e leia no `index.md` o **Workspace** do plano (`$WORKSPACE = $MONOREPO/.worktrees/plan-N`). O `/execute` trabalha em **worktrees por plano**, então o código da PR está em `$WORKSPACE/<repo>`, **não** na cópia principal.
+Guarde `plan-N` e leia no `index.json` o **workspace** do plano (`workspace.root`, ex.: `$MONOREPO/.worktrees/plan-N`). O `/execute` trabalha em **worktrees por plano**, então o código da PR está em `$WORKSPACE/<repo>`, **não** na cópia principal.
 
 Determine o diretório de trabalho da PR (`REPO_DIR`):
 
@@ -180,21 +180,21 @@ gh api --method POST "repos/<owner>/<repo>/pulls/<number>/requested_reviewers" \
 
 ---
 
-## Passo 11 — Registrar a rodada no `index.md`
+## Passo 11 — Registrar a rodada no `index.json`
 
-Descubra o número desta rodada (conte as linhas já existentes na tabela **Rodadas de review**) e **adicione** uma nova linha (nunca sobrescreva):
+Descubra o número desta rodada (`reviewRounds.length + 1`) e **adicione** um item ao array `reviewRounds` (nunca sobrescreva os existentes):
 
 ```bash
 date '+%Y-%m-%d %H:%M'
 ```
 
-Nova linha, ex.:
+Faça **read-modify-write**: leia o objeto inteiro, dê `push` em `reviewRounds` e regrave, ex.:
 
-```
-| 3 | 2026-09-12 09:15 | Ajuste no tratamento de erro do /esteira + teste faltante |
+```json
+{ "round": 3, "at": "2026-09-12 09:15", "summary": "Ajuste no tratamento de erro do /esteira + teste faltante" }
 ```
 
-> `/resolve-reviewer` **não** altera a tabela **Progresso** — só adiciona em **Rodadas de review**.
+> `/resolve-reviewer` **não** altera `phases` — só adiciona em `reviewRounds`.
 
 ---
 
@@ -205,7 +205,7 @@ Nova linha, ex.:
 
   PR:       <URL>
   Plano:    plan-N — <título>
-  Rodada:   #<n> registrada no index.md
+  Rodada:   #<n> registrada no index.json
   CI:       verde ✓
   PR:       respondida e marcada para review novamente
 

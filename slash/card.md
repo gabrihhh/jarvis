@@ -19,27 +19,31 @@ description: Cria a tarefa no Jira a partir do plano de implementação — esco
 ## REGRA GLOBAL
 
 - Esta fase **não implementa código**.
+- **Achar antes de criar:** se o plano já tem um card no Jira (`jira` no `index.json`, ou o usuário informa um id), **vincule o existente** — não crie outro.
 - **Nunca crie o card** sem antes mostrar título + descrição e ter os dados corretos (organização, tipo, branch).
-- **Guard:** só roda se o `/blueprint` estiver **concluído** no `index.md`.
+- Assim que achar/criar o card, **salve na hora** `jira`, `jiraUrl` e `jiraSummary` no `index.json` (read-modify-write) — antes de qualquer enriquecimento.
+- **Guard:** só roda se o `/blueprint` estiver **concluído** no `index.json` (`phases["blueprint"].done`).
+- Toda escrita no `index.json` é **read-modify-write**: leia o objeto inteiro, altere só o campo desta fase e regrave (Write, JSON válido). **Nunca** apague dado de outra fase.
 - Requer o **MCP do Jira** conectado.
 - Se travar — MCP indisponível, sem status compatível, ambiguidade — **pare e pergunte**.
 - As chamadas ao Jira usam o **MCP do Jira** (ex.: `getVisibleJiraProjects`, `getJiraProjectIssueTypesMetadata`, `createJiraIssue`, `getTransitionsForJiraIssue`, `transitionJiraIssue`, `editJiraIssue`, `addCommentToJiraIssue`, `atlassianUserInfo`). Use o servidor de Jira conectado no ambiente.
 
 ---
 
-## Passo 1 — Plan ativo e leitura do `index.md`
+## Passo 1 — Plan ativo e leitura do `index.json`
 
 Descubra o `MONOREPO` pelo `.claude/estrutura.md` (campo **Caminho**).
 
-Determine o `plan-N` (argumento, ou o mais recente):
+Determine o `plan-N`: se o kanban passou `JARVIS_PLAN`, use-o; senão o argumento; senão o mais recente:
 
 ```bash
+echo "${JARVIS_PLAN:-}"
 ls -d "$MONOREPO"/plans/plan-* 2>/dev/null | sed 's#.*/plan-##' | sort -n | tail -1
-cat "$MONOREPO/plans/plan-$N/index.md"
+cat "$MONOREPO/plans/plan-$N/index.json"
 cat "$MONOREPO/plans/plan-$N/plano-implementacao.md"
 ```
 
-Extraia do `index.md`: **título**, **tipo** (fix/feat), **branch base** (main/qa) e os horários de **início/fim do /scope** (tabela Progresso).
+Extraia do `index.json`: **título** (`title`), **tipo** (`type`), **branch base** (`base`) e os horários de início/fim do `/scope` (`phases["scope"].startedAt` / `.finishedAt`).
 
 Registre o início desta fase:
 
@@ -52,16 +56,16 @@ Guarde como `INICIO_CARD`.
 
 ## Passo 2 — Guard: `/blueprint` concluído?
 
-Na tabela **Progresso** do `index.md`, verifique a linha `/blueprint`.
+No `index.json`, verifique `phases["blueprint"].done`.
 
-- Se **não** estiver `✅ concluído`:
+- Se **não** for `true`:
   ```
   ⚠️ O /blueprint deste plano não está concluído.
   Rode /blueprint antes de usar /card.
   ```
   Interrompa aqui.
 
-- Se concluído, marque `/card` como `🔄 em andamento` (Início = `INICIO_CARD`) e siga.
+- Se for `true`, faça **read-modify-write** no `index.json` marcando `phases["card"].startedAt = "<INICIO_CARD>"` (preservando o resto) e siga.
 
 ---
 
@@ -97,13 +101,29 @@ Aguarde a escolha. Guarde `ORG` (nome) e a chave do projeto/board (`PROJECT_KEY`
 
 ---
 
-## Passo 5 — Salvar a organização no `index.md`
+## Passo 5 — Salvar a organização no `index.json`
 
-No `index.md` do plan, preencha o campo **Organização (Jira)** com `ORG` (e o `PROJECT_KEY` na observação, se quiser).
+No `index.json` do plan, faça **read-modify-write** preenchendo `org = "<ORG>"` (guarde também `orgKey = "<PROJECT_KEY>"`, preservando o resto).
 
 ---
 
-## Passo 6 — Montar e criar o card
+## Passo 6 — Achar o card existente OU criar
+
+Primeiro decida se o card **já existe**:
+- Se o `index.json` já traz `jira` (ex.: numeração pré-atribuída, `VENA-1144`), **ou** o usuário informar um id → é um **card existente**.
+- Senão → será **criado** um novo.
+
+### Caso A — Card já existe (achar e vincular)
+
+Busque o card no Jira (`getJiraIssue` com o id) e confirme:
+
+```
+Encontrei o card <CARD_ID>: "<summary retornado pelo Jira>". É esse mesmo? (sim / informe outro id)
+```
+
+Guarde `CARD_ID`, a URL e o **summary EXATO** retornado pelo Jira (`jiraSummary`). **Não crie outro card.**
+
+### Caso B — Criar o card
 
 Monte:
 
@@ -123,7 +143,12 @@ Vou criar no board <PROJECT_KEY>:
 Confirma a criação? (sim / ajustar)
 ```
 
-Ao confirmar, crie via `createJiraIssue` (tipo de issue apropriado do projeto — consulte `getJiraProjectIssueTypesMetadata` se necessário). Guarde o **id do card** (ex.: `VENA-223`) e a URL.
+Ao confirmar, crie via `createJiraIssue` (tipo de issue apropriado do projeto — consulte `getJiraProjectIssueTypesMetadata` se necessário). Guarde `CARD_ID`, a URL e o **summary** do card (`jiraSummary`).
+
+### Salvar na hora (ambos os casos)
+
+Assim que tiver o card (achado ou criado), faça **read-modify-write** no `index.json` já salvando (o resto do enriquecimento segue nos próximos passos):
+- `jira = "<CARD_ID>"` · `jiraUrl = "<url>"` · `jiraSummary = "<summary do Jira>"`
 
 ---
 
@@ -150,7 +175,7 @@ Consulte as transições/status disponíveis do card (`getTransitionsForJiraIssu
 
 ## Passo 9 — Comentar o tempo do scope
 
-Calcule a duração do `/scope` (início → fim, da tabela Progresso do `index.md`) e adicione como **comentário no card** (`addCommentToJiraIssue`):
+Calcule a duração do `/scope` (início → fim de `phases["scope"]` no `index.json`) e adicione como **comentário no card** (`addCommentToJiraIssue`):
 
 ```
 Tempo de escopo (/scope): 2026-09-10 09:12 → 2026-09-10 10:05 (~53 min)
@@ -158,7 +183,7 @@ Tempo de escopo (/scope): 2026-09-10 09:12 → 2026-09-10 10:05 (~53 min)
 
 ---
 
-## Passo 10 — Vincular o card ao `index.md` e concluir
+## Passo 10 — Vincular o card ao `index.json` e concluir
 
 Registre o fim desta fase:
 
@@ -167,10 +192,11 @@ date '+%Y-%m-%d %H:%M'
 ```
 Guarde como `FIM_CARD`.
 
-No `index.md` do plan:
-- preencha **Card** com o id + URL (ex.: `VENA-223 — <url>`);
-- preencha **Branch de trabalho** com `<tipo>/<base>/<id-do-card>` (ex.: `fix/main/VENA-223`);
-- marque a fase `/card` como `✅ concluído` (Início = `INICIO_CARD`, Fim = `FIM_CARD`).
+No `index.json` do plan, faça **read-modify-write** (preservando o resto — `jira`/`jiraUrl`/`jiraSummary` já foram salvos no Passo 6):
+- `branch = "<tipo>/<base>/<CARD_ID>"` (ex.: `fix/main/VENA-223`)
+- `phases["card"].done = true` · `phases["card"].startedAt = "<INICIO_CARD>"` · `phases["card"].finishedAt = "<FIM_CARD>"`
+
+> Lembrete: **o kanban exibe o `jiraSummary`** quando há card. Ele tem que ser o nome real do card no Jira (Passo 6).
 
 ---
 

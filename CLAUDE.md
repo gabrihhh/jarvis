@@ -15,6 +15,9 @@ jarvis --setup               # configura status bar e copia slash/ → ~/.claude
 jarvis --line                # saída da status bar (boxes Unicode)
 jarvis --theme               # gerencia cores dos boxes (context | tokens)
 jarvis --token <mode>        # on | complete | off
+jarvis --kanban              # board kanban do fluxo de desenvolvimento (localhost)
+jarvis --kanban-setup        # provisiona o kanban (node-pty no runtime + hooks de status)
+jarvis --attach <plan-N>     # anexa o terminal à sessão de um card (usado pelo board)
 ```
 
 Não há step de build — o projeto é ESM puro (`"type": "module"`), Node.js >= 18.
@@ -34,6 +37,18 @@ src/
   display.js         # render() — dashboard completo com boxes Unicode
   theme.js           # readTheme()/writeTheme() — cores dos boxes da status bar
   config.js          # readConfig()/writeConfig() — config de runtime (tokenDisplay)
+  kanban/            # jarvis --kanban: board local do fluxo (Node puro, sem Claude)
+    server.js        #   HTTP + SSE (tempo real) + endpoints + IPC do attach
+    session.js       #   1 PTY por card via node-pty (spawn claude, roda skill)
+    board.js         #   config das colunas↔skills (~/.claude/jarvis-kanban.json)
+    planIndex.js     #   lê plans/*/index.json (progresso, guards, nome do Jira)
+    store.js         #   persiste os cards do board (plans/.kanban.json)
+    plans.js         #   descobre/observa os plan-N em plans/
+    hooks.js         #   status em tempo real via hooks (jarvis --hook)
+    attach.js        #   cliente jarvis --attach (espelha o PTY no terminal nativo)
+    pty.js           #   loadPty() — node-pty carregado sob demanda (não é dep base)
+    setup.js         #   jarvis --kanban-setup: instala node-pty (runtime) + hooks
+    ipc.js / launch.js / ui.html
 slash/                        # todo .md aqui é copiado por --setup para ~/.claude/commands/
                               # (vem vazia por padrão — receber novos slash commands aqui)
 docs/
@@ -48,6 +63,10 @@ docs/
 |---|---|
 | `~/.claude/jarvis.json` | config persistente: modo de exibição de tokens (`tokenDisplay`) |
 | `~/.claude/jarvis-theme.json` | cores customizadas dos boxes da status bar |
+| `~/.claude/jarvis-kanban.json` | config do board do kanban (colunas ↔ skills) |
+| `~/.claude/jarvis-kanban-runtime/` | runtime do kanban (node-pty instalado por `--kanban-setup`) |
+| `<projeto>/plans/.kanban.json` | estado do board por projeto (coluna de cada card + rascunhos) |
+| `<projeto>/plans/plan-N/index.json` | estado estruturado do plano (fases, jira, progresso) |
 | `~/.claude/settings.json` | status bar gerenciada por `jarvis --setup` |
 | `~/.claude/sessions/<pid>.json` | metadados de sessão criados pelo Claude Code (`sessionId`, `cwd`, `startedAt`) |
 | `~/.claude/projects/**/*.jsonl` | histórico de uso de tokens por sessão (fonte primária do dashboard) |

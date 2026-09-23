@@ -1,6 +1,6 @@
 ---
 name: scope
-description: Define o escopo de uma alteração — sincroniza a branch (main/qa), entende o fluxo real front→API, tira todas as dúvidas, cria e revisa a especificação e salva em plans/plan-N com o index.md (painel de progresso)
+description: Define o escopo de uma alteração — sincroniza a branch (main/qa), entende o fluxo real front→API, tira todas as dúvidas, cria e revisa a especificação e salva em plans/plan-N com o index.json (estado estruturado do progresso)
 ---
 
 # /scope — Escopo da Alteração
@@ -240,7 +240,7 @@ Grave a especificação em `"$MONOREPO/plans/plan-$N/spec.md"`.
 
 ---
 
-## Passo 13 — Criar o `index.md` (painel de progresso)
+## Passo 13 — Criar o `index.json` (estado estruturado do progresso)
 
 Registre o horário de fim:
 
@@ -249,51 +249,35 @@ date '+%Y-%m-%d %H:%M'
 ```
 Guarde como `FIM_SCOPE`.
 
-Crie `"$MONOREPO/plans/plan-$N/index.md"` (markdown-only) marcando **/scope como concluído**:
+Crie `"$MONOREPO/plans/plan-$N/index.json"` — a **fonte de verdade estruturada** do plano, marcando **`phases.scope.done = true`**. Este arquivo é lido por máquina (inclusive pelo kanban), então **é JSON válido, sem comentários**. Use a ferramenta Write (não heredoc de shell) para gravá-lo.
 
-```markdown
-# 📋 Plano N — <título>
+Preencha exatamente com o que você já sabe do scope; deixe `null` o que ainda não existe (será preenchido pelas fases seguintes):
 
-> Painel de progresso do plano. Todo comando lê e atualiza este arquivo. É a fonte de verdade do andamento.
-
-## Identificação
-- **Pasta:** plan-N
-- **Título:** <título>
-- **Tipo:** <fix|feat>
-- **Branch base:** <main|qa>
-- **Branch de trabalho:** <tipo>/<base>/<card>   <!-- card definido no /card -->
-- **Organização (Jira):** —   <!-- definido no /card -->
-- **Card:** —                 <!-- definido no /card -->
-- **PR:** —                   <!-- definido no /execute -->
-- **Repositórios:** <repos envolvidos>
-
-## Progresso
-<!-- status: ⬜ pendente | 🔄 em andamento | ✅ concluído -->
-| Fase          | Status        | Início            | Fim               |
-|---------------|---------------|-------------------|-------------------|
-| /scope        | ✅ concluído   | <INICIO_SCOPE>    | <FIM_SCOPE>       |
-| /blueprint    | ⬜ pendente    | —                 | —                 |
-| /card         | ⬜ pendente    | —                 | —                 |
-| /execute      | ⬜ pendente    | —                 | —                 |
-| /create-test  | ⬜ pendente    | —                 | —                 |
-
-## Testes (definidos no /scope)
-- **Stack unit:** <STACK_UNIT>
-- **Stack e2e:** <STACK_E2E>
-- **Cenários:**
-  - e2e: <cenário>
-  - unit: <cenário>
-
-## Rodadas de review (/resolve-reviewer)
-| Rodada | Quando            | Resumo                                   |
-|:------:|-------------------|------------------------------------------|
-| —      | —                 | —                                        |
-
-## Artefatos
-- 📄 Especificação → spec.md
-- 🛠️ Plano de implementação → plano-implementacao.md   <!-- criado no /blueprint -->
-- 🧪 Guia de teste → guia-de-teste.md                  <!-- criado no /create-test -->
+```json
+{
+  "title": "<título>",
+  "type": "<fix|feat>",
+  "base": "<main|qa>",
+  "repos": ["<repos envolvidos>"],
+  "org": null,
+  "jira": null,
+  "branch": null,
+  "pr": null,
+  "stack": { "unit": "<STACK_UNIT>", "e2e": "<STACK_E2E>" },
+  "scenarios": { "e2e": ["<cenário e2e>"], "unit": ["<cenário unit>"] },
+  "phases": {
+    "scope":       { "done": true,  "startedAt": "<INICIO_SCOPE>", "finishedAt": "<FIM_SCOPE>" },
+    "blueprint":   { "done": false, "startedAt": null, "finishedAt": null },
+    "card":        { "done": false, "startedAt": null, "finishedAt": null },
+    "execute":     { "done": false, "startedAt": null, "finishedAt": null },
+    "create-test": { "done": false, "startedAt": null, "finishedAt": null }
+  },
+  "reviewRounds": [],
+  "artifacts": { "spec": "spec.md", "blueprint": null, "testGuide": null }
+}
 ```
+
+> Chaves das fases (`scope`, `blueprint`, `card`, `execute`, `create-test`) são **fixas** — as fases seguintes só alteram `done`/`startedAt`/`finishedAt` da sua própria fase, sem renomear nada. Quem lê o `index.json` (fases seguintes, kanban) faz **read-modify-write**: lê o objeto inteiro, muda só o seu campo e regrava, para nunca apagar dado das outras fases.
 
 ---
 
@@ -305,7 +289,7 @@ Crie `"$MONOREPO/plans/plan-$N/index.md"` (markdown-only) marcando **/scope como
   Plano:      plan-N — <título>
   Tipo:       <fix|feat>   ·   Branch base: <main|qa>
   Testes:     unit <STACK_UNIT> · e2e <STACK_E2E>
-  Salvos:     plans/plan-N/spec.md  +  plans/plan-N/index.md
+  Salvos:     plans/plan-N/spec.md  +  plans/plan-N/index.json
   Duração:    <INICIO_SCOPE> → <FIM_SCOPE>
 
 Próximo passo: rode /blueprint para gerar o planejamento de implementação.

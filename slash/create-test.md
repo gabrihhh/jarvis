@@ -20,7 +20,8 @@ description: Cria um guia de teste em português, leigo e humanizado, explicando
 
 - O guia é em **português**, **leigo e humanizado** — escrito para alguém que **não entende o sistema**.
 - Esta fase **não altera código**.
-- **Guard:** só roda se o `/execute` estiver **concluído** no `index.md`.
+- **Guard:** só roda se o `/execute` estiver **concluído** no `index.json` (`phases["execute"].done`).
+- Toda escrita no `index.json` é **read-modify-write**: leia o objeto inteiro, altere só o campo desta fase e regrave (Write, JSON válido). **Nunca** apague dado de outra fase.
 - Requer **MCP do Jira** conectado (para comentar no card).
 - Se travar — sem card, ambiguidade sobre o que testar — **pare e pergunte**.
 
@@ -28,16 +29,17 @@ description: Cria um guia de teste em português, leigo e humanizado, explicando
 
 ## Passo 1 — Plan ativo e leitura
 
-`MONOREPO` vem do `.claude/estrutura.md`. Determine `plan-N` (argumento ou o mais recente):
+`MONOREPO` vem do `.claude/estrutura.md`. Determine `plan-N`: se o kanban passou `JARVIS_PLAN`, use-o; senão o argumento; senão o mais recente:
 
 ```bash
+echo "${JARVIS_PLAN:-}"
 ls -d "$MONOREPO"/plans/plan-* 2>/dev/null | sed 's#.*/plan-##' | sort -n | tail -1
-cat "$MONOREPO/plans/plan-$N/index.md"
+cat "$MONOREPO/plans/plan-$N/index.json"
 cat "$MONOREPO/plans/plan-$N/spec.md"
 cat "$MONOREPO/plans/plan-$N/plano-implementacao.md"
 ```
 
-Extraia: **título**, **tipo**, **id do card** (`CARD_ID`), as **telas/fluxo** e as **áreas afetadas** (front → API).
+Extraia do `index.json`: **título** (`title`), **tipo** (`type`), **id do card** (`jira` → `CARD_ID`); e do spec/plano as **telas/fluxo** e as **áreas afetadas** (front → API).
 
 Registre o início:
 
@@ -50,16 +52,16 @@ Guarde como `INICIO_CT`.
 
 ## Passo 2 — Guard: `/execute` concluído?
 
-Na tabela **Progresso** do `index.md`, verifique `/execute`.
+No `index.json`, verifique `phases["execute"].done`.
 
-- Se **não** estiver `✅ concluído`:
+- Se **não** for `true`:
   ```
   ⚠️ O /execute deste plano não está concluído.
   Rode /execute antes de usar /create-test.
   ```
   Interrompa aqui.
 
-- Se concluído, marque `/create-test` como `🔄 em andamento` (Início = `INICIO_CT`) e siga.
+- Se for `true`, faça **read-modify-write** no `index.json` marcando `phases["create-test"].startedAt = "<INICIO_CT>"` (preservando o resto) e siga.
 
 ---
 
@@ -134,7 +136,7 @@ Confirme que o comentário foi criado.
 
 ---
 
-## Passo 6 — Atualizar o `index.md` e concluir
+## Passo 6 — Atualizar o `index.json` e concluir
 
 Registre o fim:
 
@@ -143,9 +145,9 @@ date '+%Y-%m-%d %H:%M'
 ```
 Guarde como `FIM_CT`.
 
-No `index.md` do plan:
-- marque `/create-test` como `✅ concluído` (Início = `INICIO_CT`, Fim = `FIM_CT`);
-- confirme o link para `guia-de-teste.md` no bloco **Artefatos**.
+No `index.json` do plan, faça **read-modify-write** (preservando o resto):
+- `phases["create-test"].done = true` · `phases["create-test"].startedAt = "<INICIO_CT>"` · `phases["create-test"].finishedAt = "<FIM_CT>"`
+- `artifacts.testGuide = "guia-de-teste.md"`
 
 ---
 

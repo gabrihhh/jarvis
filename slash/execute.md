@@ -25,22 +25,24 @@ description: Implementa a alteração escopada — cria a branch em cada repo, i
 - **Não conclua** antes do **CI verde**.
 - `push` e abertura de PR são ações externas: **peça confirmação uma vez** antes de executá-las.
 - Requer **`gh`** autenticado e **MCP do Jira** conectado.
-- **Guard:** só roda se o `/card` estiver **concluído** no `index.md`.
+- **Guard:** só roda se o `/card` estiver **concluído** no `index.json` (`phases["card"].done`).
+- Toda escrita no `index.json` é **read-modify-write**: leia o objeto inteiro, altere só o campo desta fase e regrave (Write, JSON válido). **Nunca** apague dado de outra fase.
 - Se travar — CI quebrado sem causa clara, conflito, ambiguidade — **pare e pergunte**.
 
 ---
 
 ## Passo 1 — Plan ativo e leitura do plano
 
-`MONOREPO` vem do `.claude/estrutura.md`. Determine `plan-N` (argumento ou o mais recente):
+`MONOREPO` vem do `.claude/estrutura.md`. Determine `plan-N`: se o kanban passou `JARVIS_PLAN`, use-o; senão o argumento; senão o mais recente:
 
 ```bash
+echo "${JARVIS_PLAN:-}"
 ls -d "$MONOREPO"/plans/plan-* 2>/dev/null | sed 's#.*/plan-##' | sort -n | tail -1
-cat "$MONOREPO/plans/plan-$N/index.md"
+cat "$MONOREPO/plans/plan-$N/index.json"
 cat "$MONOREPO/plans/plan-$N/plano-implementacao.md"
 ```
 
-Extraia do `index.md`: **título**, **tipo** (fix/feat), **branch base** (main/qa), **branch de trabalho** (`BRANCH`, ex.: `fix/main/VENA-223`) e **id do card** (`CARD_ID`). Do plano, extraia os **repositórios envolvidos**.
+Extraia do `index.json`: **título** (`title`), **tipo** (`type`), **branch base** (`base`), **branch de trabalho** (`branch`, ex.: `fix/main/VENA-223`) e **id do card** (`jira` → `CARD_ID`). Do plano, extraia os **repositórios envolvidos**.
 
 Defina:
 - `LABEL` = `MAIN`|`QA`
@@ -59,9 +61,9 @@ Guarde como `INICIO_EXEC`.
 
 ## Passo 2 — Guard: `/card` concluído?
 
-Na tabela **Progresso** do `index.md`, verifique `/card`.
+No `index.json`, verifique `phases["card"].done`.
 
-- Se **não** estiver `✅ concluído`:
+- Se **não** for `true`:
   ```
   ⚠️ O /card deste plano não está concluído.
   Rode /card antes de usar /execute.
@@ -69,7 +71,7 @@ Na tabela **Progresso** do `index.md`, verifique `/card`.
   Interrompa aqui.
 
 - Confirme `gh auth status` OK. Se não, oriente `gh auth login`.
-- Se concluído, marque `/execute` como `🔄 em andamento` (Início = `INICIO_EXEC`) e siga.
+- Se for `true`, faça **read-modify-write** no `index.json` marcando `phases["execute"].startedAt = "<INICIO_EXEC>"` (preservando o resto) e siga.
 
 ---
 
@@ -159,7 +161,7 @@ Também vale como "existe" um skill/plugin de code-review disponível na sessão
   ```
   ℹ️ /code-review não encontrado no ambiente — pulando o review interno.
   ```
-  Registre no `index.md` que o review interno foi pulado (ausente). **Não** bloqueie o fluxo por isso.
+  Registre no `index.json` (read-modify-write) `codeReviewInternal = "pulado-ausente"`. **Não** bloqueie o fluxo por isso.
 
 - Se **existir**, siga o loop abaixo.
 
@@ -223,7 +225,7 @@ Com o CI verde, mova o card no Jira para **code-review** (MCP do Jira, `transiti
 
 ---
 
-## Passo 10 — Atualizar o `index.md` e concluir
+## Passo 10 — Atualizar o `index.json` e concluir
 
 Registre o fim:
 
@@ -232,10 +234,10 @@ date '+%Y-%m-%d %H:%M'
 ```
 Guarde como `FIM_EXEC`.
 
-No `index.md` do plan:
-- registre o **Workspace**: `$WORKSPACE` (raiz dos worktrees deste plano);
-- preencha **PR** com a(s) URL(s);
-- marque a fase `/execute` como `✅ concluído` (Início = `INICIO_EXEC`, Fim = `FIM_EXEC`).
+No `index.json` do plan, faça **read-modify-write** (preservando o resto):
+- `workspace.root = "<WORKSPACE>"` · `workspace.worktrees = [<repos envolvidos>]`
+- `pr = [<url(s) da(s) PR(s)>]`
+- `phases["execute"].done = true` · `phases["execute"].startedAt = "<INICIO_EXEC>"` · `phases["execute"].finishedAt = "<FIM_EXEC>"`
 
 ---
 

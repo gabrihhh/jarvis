@@ -20,25 +20,27 @@ description: Gera o planejamento técnico de implementação a partir da spec do
 
 - Esta fase **não implementa** — apenas planeja (gera um markdown).
 - **Não altere** nenhum arquivo dos repositórios; escreva somente dentro de `plans/plan-N/`.
-- **Guard:** só roda se o `/scope` estiver **concluído** no `index.md`.
+- **Guard:** só roda se o `/scope` estiver **concluído** no `index.json` (`phases["scope"].done`).
+- Toda escrita no `index.json` é **read-modify-write**: leia o objeto inteiro, altere só o campo desta fase e regrave (Write, JSON válido sem comentários). **Nunca** apague dado de outra fase.
 - Se travar — sem plan, spec ausente, ambiguidade — **pare e pergunte**.
 
 ---
 
-## Passo 1 — Identificar o plan ativo e ler o `index.md`
+## Passo 1 — Identificar o plan ativo e ler o `index.json`
 
 Descubra o monorepo pelo `.claude/estrutura.md` (campo **Caminho**); guarde como `MONOREPO`.
 
-Se o usuário passou `plan-N` como argumento, use-o. Caso contrário, pegue o **mais recente**:
+Determine o `plan-N`: se o kanban passou `JARVIS_PLAN` (ex.: `plan-3`), use-o; senão o argumento; senão o **mais recente**:
 
 ```bash
+echo "${JARVIS_PLAN:-}"
 ls -d "$MONOREPO"/plans/plan-* 2>/dev/null | sed 's#.*/plan-##' | sort -n | tail -1
 ```
 
-Leia o painel:
+Leia o estado estruturado:
 
 ```bash
-cat "$MONOREPO/plans/plan-$N/index.md"
+cat "$MONOREPO/plans/plan-$N/index.json"
 ```
 
 Confirme com o usuário em uma linha (só para garantir que é o plan certo):
@@ -58,16 +60,16 @@ Guarde como `INICIO_BP`.
 
 ## Passo 2 — Guard: `/scope` concluído?
 
-Na tabela **Progresso** do `index.md`, verifique a linha `/scope`.
+No `index.json`, verifique `phases["scope"].done`.
 
-- Se **não** estiver `✅ concluído`, encerre:
+- Se **não** for `true`, encerre:
   ```
   ⚠️ O /scope deste plano não está concluído.
   Rode /scope antes de usar /blueprint.
   ```
   Interrompa aqui.
 
-- Se estiver concluído, marque no `index.md` a fase `/blueprint` como `🔄 em andamento` (Início = `INICIO_BP`) e siga.
+- Se for `true`, faça **read-modify-write** no `index.json` marcando o início desta fase (`phases["blueprint"].startedAt = "<INICIO_BP>"`, preservando todo o resto) e siga.
 
 ---
 
@@ -125,7 +127,7 @@ Formato sugerido:
 
 ---
 
-## Passo 5 — Atualizar o `index.md`
+## Passo 5 — Atualizar o `index.json`
 
 Registre o horário de fim:
 
@@ -134,9 +136,10 @@ date '+%Y-%m-%d %H:%M'
 ```
 Guarde como `FIM_BP`.
 
-No `index.md` do plan:
-- marque a fase `/blueprint` como `✅ concluído` (Início = `INICIO_BP`, Fim = `FIM_BP`);
-- no bloco **Artefatos**, confirme o link para `plano-implementacao.md`.
+No `index.json` do plan, faça **read-modify-write** (leia o objeto inteiro, altere só o abaixo, regrave com Write preservando o resto):
+- `phases["blueprint"].done = true`
+- `phases["blueprint"].startedAt = "<INICIO_BP>"` · `phases["blueprint"].finishedAt = "<FIM_BP>"`
+- `artifacts.blueprint = "plano-implementacao.md"`
 
 ---
 
