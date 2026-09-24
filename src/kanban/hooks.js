@@ -79,9 +79,11 @@ export function hooksInstalled(settingsPath) {
 export async function reportHook(event) {
   const card = process.env.JARVIS_CARD;
   const port = process.env.JARVIS_KANBAN_PORT;
+  const project = process.env.JARVIS_KANBAN_PROJECT; // qual workspace roteia o setStatus
   const status = HOOK_EVENTS[event];
-  // Sem env do kanban (sessão normal do Claude) ou evento desconhecido → no-op.
-  if (!card || !port || !status) return;
+  // Sem env do kanban (sessão normal do Claude), sem projeto, ou evento
+  // desconhecido → no-op. Sem `project` o server ignora o POST de qualquer forma.
+  if (!card || !port || !project || !status) return;
 
   const host = process.env.JARVIS_KANBAN_HOST || '127.0.0.1';
   let message;
@@ -90,7 +92,7 @@ export async function reportHook(event) {
     if (raw) message = JSON.parse(raw).message;
   } catch { /* stdin ausente/inválido — segue sem message */ }
 
-  await post(host, port, '/hook', { card, event, status, message });
+  await post(host, port, '/hook', { project, card, event, status, message });
 }
 
 // Helpers ---------------------------------------------------------------------

@@ -34,7 +34,7 @@ if (args.includes('--help') || args.includes('-h')) {
     jarvis --token on            Show total tokens box (◈)
     jarvis --token complete      Show token box + INPUT/HISTORY/CACHE/RESPONSE breakdown
     jarvis --token off           Disable token display
-    jarvis --kanban              Open the dev-flow kanban board (localhost)
+    jarvis --kanban              Open the multi-project dev-flow kanban (localhost, one tab per folder)
     jarvis --kanban-setup        Provision the kanban (node-pty runtime + status hooks)
     jarvis --attach <plan-N>     Attach the terminal to a card's session
     jarvis --help                Show this help

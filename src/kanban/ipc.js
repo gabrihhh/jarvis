@@ -1,11 +1,13 @@
 import { join } from 'path';
 import { tmpdir } from 'os';
-import { createHash } from 'crypto';
+import { projectId } from './paths.js';
 
-// Endpoint do socket local para o attach, por projeto (cwd). Cross-platform:
-// named pipe no Windows, unix domain socket no resto.
-export function ipcEndpoint(key) {
-  const hash = createHash('sha1').update(key).digest('hex').slice(0, 12);
+// Endpoint do socket local para o attach, por projeto. Cross-platform: named
+// pipe no Windows, unix domain socket no resto. Deriva de projectId (mesma
+// fonte única de identidade) — nunca recomputar o hash aqui, senão o socket e a
+// chave do Map de workspaces podem divergir em silêncio para a mesma pasta.
+export function ipcEndpoint(canonical) {
+  const hash = projectId(canonical);
   return process.platform === 'win32'
     ? `\\\\.\\pipe\\jarvis-kanban-${hash}`
     : join(tmpdir(), `jarvis-kanban-${hash}.sock`);

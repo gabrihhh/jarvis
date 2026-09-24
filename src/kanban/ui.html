@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>jarvis kanban</title>
+<title>Jarvis Kanban</title>
 <style>
   :root { color-scheme: dark; }
   * { box-sizing: border-box; }
@@ -11,7 +11,19 @@
   body { margin: 0; display: flex; flex-direction: column; font: 14px/1.4 ui-sans-serif, system-ui, sans-serif; background: #0b0f17; color: #e2e8f0; }
   header { padding: 14px 20px; border-bottom: 1px solid #1e293b; display: flex; align-items: center; gap: 12px; flex: 0 0 auto; }
   header h1 { font-size: 15px; margin: 0; font-weight: 600; letter-spacing: .3px; }
+  /* --- barra de abas --- */
+  .tabs { display: flex; align-items: stretch; gap: 4px; padding: 6px 14px 0; border-bottom: 1px solid #1e293b; flex: 0 0 auto; overflow-x: auto; }
+  .tab { display: flex; align-items: center; gap: 8px; padding: 7px 10px 7px 12px; background: #0f1626; border: 1px solid #1e293b; border-bottom: none; border-radius: 8px 8px 0 0; color: #94a3b8; cursor: pointer; white-space: nowrap; max-width: 260px; }
+  .tab:hover { color: #cbd5e1; }
+  .tab.active { background: #172033; color: #e2e8f0; border-color: #263450; }
+  .tab .lbl { overflow: hidden; text-overflow: ellipsis; }
+  .tab .dot { width: 7px; height: 7px; border-radius: 999px; background: #f59e0b; flex: 0 0 auto; }
+  .tab .x { border: none; background: none; color: #64748b; cursor: pointer; font-size: 14px; line-height: 1; padding: 0 2px; border-radius: 4px; }
+  .tab .x:hover { color: #f87171; background: #ffffff10; }
+  .tab-add { align-self: center; margin-left: 4px; border: 1px dashed #334155; background: none; color: #64748b; border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 14px; }
+  .tab-add:hover { border-color: #3b82f6; color: #93c5fd; }
   .board { flex: 1 1 auto; min-height: 0; display: flex; gap: 16px; padding: 30px; overflow-x: auto; align-items: stretch; }
+  .board.empty { align-items: center; justify-content: center; color: #475569; }
   .col { flex: 0 0 300px; min-height: 0; display: flex; flex-direction: column; background: #0f1626; border: 1px solid #1e293b; border-radius: 10px; }
   .col.parking { background: #0c111c; }
   .col h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .6px; color: #94a3b8; margin: 0; padding: 12px 14px 8px; display: flex; justify-content: space-between; flex: 0 0 auto; }
@@ -32,38 +44,34 @@
 </head>
 <body>
 <header>
-  <h1>jarvis <span style="color:#3b82f6">kanban</span></h1>
+  <h1>Jarvis <span style="color:#3b82f6">Kanban</span></h1>
 </header>
+<div class="tabs" id="tabs"></div>
 <div class="board" id="board"></div>
 
 <script>
 let BOARD = { columns: [], statuses: {} };
-const cards = new Map();
-let selectedId = null;
+let TABS = [];                    // [{ project, path, label, active }]
+let activeProject = null;         // aba ativa NESTE cliente
+let selectedId = null;            // id do card selecionado (dentro do projeto ativo)
+const cards = new Map();          // `${project}::${id}` → card (card tem .project)
+const lastStatus = new Map();     // `${project}::${id}` → status (base do alerta sonoro)
+const attention = new Set();      // projectIds com blocked/done não visto (indicador na aba)
+const key = (project, id) => `${project}::${id}`;
 
 // --- alerta sonoro (Web Audio, 100% local — sem arquivo/CDN) ----------------
-// Último status conhecido por card, separado do objeto do card: o evento SSE
-// `card` substitui o objeto inteiro, então uma flag no card seria descartada.
-const lastStatus = new Map();
 let audioCtx = null;
-
-// Destrava/retoma o AudioContext — chamado só no primeiro gesto no board
-// (autoplay do browser exige interação). Idempotente e à prova de erro.
 function unlockAudio() {
   try {
     const Ctx = window.AudioContext || window.webkitAudioContext;
     if (!Ctx) return;
     if (!audioCtx) audioCtx = new Ctx();
-    if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => { /* navegador recusou o resume — segue sem áudio */ });
+    if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => { /* recusou o resume — segue sem áudio */ });
   } catch { /* sem áudio disponível — segue em silêncio */ }
 }
-
-// Toca um alerta curto e confortável. Silencioso enquanto o contexto não foi
-// destravado por gesto (não gera erro no console).
 function playTone(kind) {
   if (!audioCtx || audioCtx.state !== 'running') return;
   const now = audioCtx.currentTime;
-  // blocked = atenção (dois beeps agudos e curtos); done = conclusão (suave, sobe).
   const notes = kind === 'blocked'
     ? [{ f: 880, t: 0, d: 0.12 }, { f: 1175, t: 0.15, d: 0.12 }]
     : [{ f: 523, t: 0, d: 0.16 }, { f: 784, t: 0.16, d: 0.24 }];
@@ -86,48 +94,103 @@ function playTone(kind) {
 async function boot() {
   BOARD = await (await fetch('/api/board')).json();
   const state = await (await fetch('/api/state')).json();
-  for (const c of state.cards) { cards.set(c.id, c); lastStatus.set(c.id, c.status); } // semeia sem tocar
+  seedState(state); // semeia sem tocar
   render();
   listen();
 
-  // destrava o áudio no primeiro gesto (clique/drag/tecla); depois se remove.
   const gestures = ['pointerdown', 'keydown', 'dragstart'];
   const onGesture = () => { unlockAudio(); for (const g of gestures) document.removeEventListener(g, onGesture); };
   for (const g of gestures) document.addEventListener(g, onGesture);
 
-  // seleção + Del: clicar no card seleciona; Del pede confirmação e apaga.
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Delete' && selectedId) {
-      const c = cards.get(selectedId);
+      const c = cards.get(key(activeProject, selectedId));
       if (c && confirm(`Apagar o card "${c.name}"? As sessões dele serão encerradas.`)) del(selectedId);
     }
   });
   document.getElementById('board').addEventListener('click', (e) => {
-    if (e.target.id === 'board') { selectedId = null; render(); } // clique no vazio deseleciona
+    if (e.target.id === 'board') { selectedId = null; render(); }
   });
+}
+
+// (Re)semeia tabs + cards + lastStatus a partir do estado completo. NUNCA toca som.
+function seedState(state) {
+  TABS = state.tabs || [];
+  // Só adota a aba ativa do server enquanto este cliente ainda não escolheu uma,
+  // ou se a atual sumiu (aba fechada). Senão preserva a escolha local.
+  if (!activeProject || !TABS.some(t => t.project === activeProject)) {
+    const a = TABS.find(t => t.active) || TABS[0];
+    activeProject = a ? a.project : null;
+  }
+  cards.clear();
+  lastStatus.clear();
+  for (const c of (state.cards || [])) { const k = key(c.project, c.id); cards.set(k, c); lastStatus.set(k, c.status); }
+  // limpa indicadores de projetos que não estão mais abertos
+  for (const p of [...attention]) if (!TABS.some(t => t.project === p)) attention.delete(p);
 }
 
 function listen() {
   const es = new EventSource('/events');
-  // reconexão reenvia `state` → re-semeia o lastStatus sem tocar (nunca soa na hidratação).
-  es.addEventListener('state', (e) => { for (const c of JSON.parse(e.data).cards) { cards.set(c.id, c); lastStatus.set(c.id, c.status); } render(); });
-  es.addEventListener('card', (e) => { const c = JSON.parse(e.data); cards.set(c.id, c); lastStatus.set(c.id, c.status); render(); }); // já tocou no `status` anterior
+  // reconexão / mudança de abas: estado completo → re-semeia sem tocar.
+  es.addEventListener('state', (e) => { seedState(JSON.parse(e.data)); render(); });
+  es.addEventListener('card', (e) => {
+    const c = JSON.parse(e.data); const k = key(c.project, c.id);
+    cards.set(k, c); lastStatus.set(k, c.status); render();
+  });
   es.addEventListener('status', (e) => {
-    const { id, status } = JSON.parse(e.data);
-    const c = cards.get(id);
+    const { project, id, status } = JSON.parse(e.data);
+    const k = key(project, id); const c = cards.get(k);
     if (!c) return;
-    if (lastStatus.get(id) !== status && (status === 'blocked' || status === 'done')) playTone(status);
-    lastStatus.set(id, status);
+    if (lastStatus.get(k) !== status && (status === 'blocked' || status === 'done')) {
+      playTone(status); // som toca independentemente da aba ativa
+      if (project !== activeProject) attention.add(project); // aba de fundo → indicador
+    }
+    lastStatus.set(k, status);
     c.status = status;
     render();
   });
-  es.addEventListener('exit', (e) => { const { id } = JSON.parse(e.data); const c = cards.get(id); if (c) { c.status = 'idle'; lastStatus.set(id, 'idle'); render(); } });
-  es.addEventListener('delete', (e) => { const { id } = JSON.parse(e.data); cards.delete(id); lastStatus.delete(id); if (selectedId === id) selectedId = null; render(); });
+  es.addEventListener('exit', (e) => {
+    const { project, id } = JSON.parse(e.data); const k = key(project, id); const c = cards.get(k);
+    if (c) { c.status = 'idle'; lastStatus.set(k, 'idle'); render(); }
+  });
+  es.addEventListener('delete', (e) => {
+    const { project, id } = JSON.parse(e.data); const k = key(project, id);
+    cards.delete(k); lastStatus.delete(k);
+    if (project === activeProject && selectedId === id) selectedId = null;
+    render();
+  });
 }
 
-function render() {
+function render() { renderTabs(); renderBoard(); }
+
+function renderTabs() {
+  const bar = document.getElementById('tabs');
+  bar.innerHTML = '';
+  for (const t of TABS) {
+    const el = document.createElement('div');
+    el.className = 'tab' + (t.project === activeProject ? ' active' : '');
+    el.title = t.path;
+    const dot = (attention.has(t.project) && t.project !== activeProject) ? '<span class="dot"></span>' : '';
+    el.innerHTML = `${dot}<span class="lbl">${escapeHtml(t.label || t.path)}</span><button class="x" title="fechar aba">×</button>`;
+    el.addEventListener('click', (ev) => { if (ev.target.closest('.x')) return; setActive(t.project); });
+    el.querySelector('.x').onclick = (ev) => { ev.stopPropagation(); closeTab(t.project); };
+    bar.appendChild(el);
+  }
+  const add = document.createElement('button');
+  add.className = 'tab-add'; add.textContent = '+'; add.title = 'abrir outra pasta';
+  add.onclick = addTab;
+  bar.appendChild(add);
+}
+
+function renderBoard() {
   const board = document.getElementById('board');
   board.innerHTML = '';
+  board.classList.remove('empty');
+  if (!activeProject) {
+    board.classList.add('empty');
+    board.textContent = 'Nenhuma aba aberta — use o "+" para abrir uma pasta.';
+    return;
+  }
   for (const col of BOARD.columns) {
     const el = document.createElement('div');
     el.className = 'col' + (col.type === 'parking' ? ' parking' : '');
@@ -136,7 +199,7 @@ function render() {
     const list = el.querySelector('.cards');
 
     for (const c of cards.values()) {
-      if (c.column !== col.id) continue;
+      if (c.project !== activeProject || c.column !== col.id) continue;
       list.appendChild(cardEl(c));
     }
     if (col.create) {
@@ -163,8 +226,8 @@ function cardEl(c) {
   el.className = 'card' + (c.id === selectedId ? ' selected' : '');
   el.draggable = true;
   const meta = [c.jira || c.plan, c.progress && c.progress.total ? `${c.progress.done}/${c.progress.total}` : null].filter(Boolean).join(' · ');
-  el.innerHTML = `<div class="name">${c.name}</div>
-    ${meta ? `<div class="meta">${meta}</div>` : ''}
+  el.innerHTML = `<div class="name">${escapeHtml(c.name)}</div>
+    ${meta ? `<div class="meta">${escapeHtml(meta)}</div>` : ''}
     <div class="row">
       <span class="badge" style="background:${st.color}22;color:${st.color}">${st.label}</span>
       <button class="open">terminal ⇱</button>
@@ -176,27 +239,69 @@ function cardEl(c) {
   return el;
 }
 
+// --- abas ---------------------------------------------------------------------
+function setActive(project) {
+  activeProject = project;
+  attention.delete(project);
+  selectedId = null;
+  render();
+}
+
+async function addTab() {
+  let r;
+  try { r = await (await fetch('/api/pick-folder', { method: 'POST' })).json(); }
+  catch { r = { error: 'seletor indisponível', fallback: 'prompt' }; }
+
+  if (r.canceled) return;
+  if (r.path) return openFolder(r.path);
+  if (r.fallback === 'prompt') {
+    const p = prompt('Caminho da pasta do projeto:');
+    if (p) return openFolder(p);
+    return;
+  }
+  if (r.error) alert(r.error);
+}
+
+async function openFolder(path) {
+  const r = await (await fetch('/api/tabs', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ path }) })).json();
+  if (r.error) { alert(r.error); return; }
+  // foca a aba (nova ou já existente); os cards chegam pelo evento SSE `state`.
+  activeProject = r.project;
+  attention.delete(r.project);
+  selectedId = null;
+  render();
+}
+
+async function closeTab(project) {
+  await fetch('/api/tabs/close', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ project }) });
+  // a barra e o board se atualizam pelo evento SSE `state`.
+}
+
+// --- ações de card (sempre no projeto ativo) ---------------------------------
 async function createCard() {
   const name = prompt('Nome do card:');
   if (!name) return;
-  await fetch('/api/card', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name }) });
+  await fetch('/api/card', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ project: activeProject, name }) });
 }
 async function move(id, column) {
-  const r = await (await fetch('/api/move', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id, column }) })).json();
+  const r = await (await fetch('/api/move', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ project: activeProject, id, column }) })).json();
   if (r.error) alert(r.error); // guard bloqueou (fase anterior não concluída)
 }
 async function del(id) {
-  await fetch('/api/delete', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id }) });
-  // a remoção da UI vem pelo evento SSE 'delete'
+  await fetch('/api/delete', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ project: activeProject, id }) });
 }
 async function open(id, btn) {
   if (btn) { if (btn.disabled) return; btn.disabled = true; btn.textContent = 'abrindo…'; }
   try {
-    const r = await (await fetch('/api/open', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id }) })).json();
+    const r = await (await fetch('/api/open', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ project: activeProject, id }) })).json();
     if (r.error) alert(r.error);
   } finally {
     if (btn) setTimeout(() => { btn.disabled = false; btn.textContent = 'terminal ⇱'; }, 3000);
   }
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
 boot();

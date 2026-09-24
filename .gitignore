@@ -2,3 +2,7 @@ node_modules/
 *.log
 .env
 .env.local
+
+# estado local / runtime — não versionar
+.claude/
+plans/
