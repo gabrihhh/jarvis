@@ -266,18 +266,19 @@ Preencha exatamente com o que você já sabe do scope; deixe `null` o que ainda 
   "stack": { "unit": "<STACK_UNIT>", "e2e": "<STACK_E2E>" },
   "scenarios": { "e2e": ["<cenário e2e>"], "unit": ["<cenário unit>"] },
   "phases": {
-    "scope":       { "done": true,  "startedAt": "<INICIO_SCOPE>", "finishedAt": "<FIM_SCOPE>" },
-    "blueprint":   { "done": false, "startedAt": null, "finishedAt": null },
-    "card":        { "done": false, "startedAt": null, "finishedAt": null },
-    "execute":     { "done": false, "startedAt": null, "finishedAt": null },
-    "create-test": { "done": false, "startedAt": null, "finishedAt": null }
+    "scope":        { "done": true,  "startedAt": "<INICIO_SCOPE>", "finishedAt": "<FIM_SCOPE>" },
+    "blueprint":    { "done": false, "startedAt": null, "finishedAt": null },
+    "card":         { "done": false, "startedAt": null, "finishedAt": null },
+    "execute":      { "done": false, "startedAt": null, "finishedAt": null },
+    "create-test":  { "done": false, "startedAt": null, "finishedAt": null },
+    "execute-test": { "done": false, "startedAt": null, "finishedAt": null }
   },
   "reviewRounds": [],
-  "artifacts": { "spec": "spec.md", "blueprint": null, "testGuide": null }
+  "artifacts": { "spec": "spec.md", "blueprint": null, "testGuide": null, "evidence": null }
 }
 ```
 
-> Chaves das fases (`scope`, `blueprint`, `card`, `execute`, `create-test`) são **fixas** — as fases seguintes só alteram `done`/`startedAt`/`finishedAt` da sua própria fase, sem renomear nada. Quem lê o `index.json` (fases seguintes, kanban) faz **read-modify-write**: lê o objeto inteiro, muda só o seu campo e regrava, para nunca apagar dado das outras fases.
+> Chaves das fases (`scope`, `blueprint`, `card`, `execute`, `create-test`, `execute-test`) são **fixas** — as fases seguintes só alteram `done`/`startedAt`/`finishedAt` da sua própria fase, sem renomear nada. Quem lê o `index.json` (fases seguintes, kanban) faz **read-modify-write**: lê o objeto inteiro, muda só o seu campo e regrava, para nunca apagar dado das outras fases.
 
 ---
 

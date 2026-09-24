@@ -11,7 +11,7 @@ import { ipcEndpoint, lineReader } from './ipc.js';
 import { openTerminal, openBrowser } from './launch.js';
 import { loadCards, saveCards } from './store.js';
 import { watchPlans, listPlanDirs } from './plans.js';
-import { readIndex, phaseDone, progress, deriveColumn } from './planIndex.js';
+import { readIndex, progress, deriveColumn } from './planIndex.js';
 import { loadPty } from './pty.js';
 import { canonicalPath, projectId, validateFolder, computeTabLabels } from './paths.js';
 import { loadTabPaths, saveTabPaths, pruneTabPaths } from './tabs.js';
@@ -302,11 +302,7 @@ export async function startKanban({ cwd = process.cwd(), open = true } = {}) {
     const col = getColumn(board, body.column);
     if (!col) return sendJson(res, { error: 'coluna não existe' }, 404);
 
-    // Guard: coluna que exige uma fase anterior só aceita se ela estiver 'done'.
-    if (col.requires && !phaseDone(readIndex(ws.cwd, card.plan), col.requires)) {
-      return sendJson(res, { error: `conclua "${col.requires}" antes de mover para "${col.title}"` }, 409);
-    }
-
+    // Sem guard de ordem: qualquer card pode ser movido para qualquer coluna.
     card.column = col.id;
 
     const skill = skillForColumn(board, col.id);

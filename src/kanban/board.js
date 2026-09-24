@@ -14,18 +14,19 @@ export const BOARD_PATH = join(homedir(), '.claude', 'jarvis-kanban.json');
 //   createsPlan → a skill desta coluna cria o plan-N e vincula ao card (Scope)
 //   returnsTo   → ao concluir a skill, o card volta sozinho para esta coluna
 //   phase       → é uma fase do fluxo; conta no progresso (index.json.phases[id])
-//   requires    → só permite soltar o card aqui se esta fase estiver 'done' no index.json (guard)
+// Não há guard de ordem: qualquer card pode ir para qualquer coluna livremente.
 export const DEFAULT_BOARD = {
   columns: [
     { id: 'backlog',          title: 'Backlog',          type: 'parking', skill: null,               create: true },
     { id: 'scope',            title: 'Scope',            type: 'action',  skill: '/scope',            createsPlan: true, phase: true },
-    { id: 'blueprint',        title: 'Blueprint',        type: 'action',  skill: '/blueprint',        phase: true, requires: 'scope' },
-    { id: 'card',             title: 'Card',             type: 'action',  skill: '/card',             phase: true, requires: 'blueprint' },
-    { id: 'execute',          title: 'Execute',          type: 'action',  skill: '/execute',          phase: true, requires: 'card' },
-    { id: 'create-test',      title: 'Create-test',      type: 'action',  skill: '/create-test',      phase: true, requires: 'execute' },
+    { id: 'blueprint',        title: 'Blueprint',        type: 'action',  skill: '/blueprint',        phase: true },
+    { id: 'card',             title: 'Card',             type: 'action',  skill: '/card',             phase: true },
+    { id: 'execute',          title: 'Execute',          type: 'action',  skill: '/execute',          phase: true },
+    { id: 'create-test',      title: 'Create-test',      type: 'action',  skill: '/create-test',      phase: true },
+    { id: 'execute-test',     title: 'Execute-test',     type: 'action',  skill: '/execute-test',     phase: true },
     { id: 'code-review',      title: 'Code-review',      type: 'parking', skill: null },
-    { id: 'resolve-reviewer', title: 'Resolve-reviewer', type: 'action',  skill: '/resolve-reviewer', returnsTo: 'code-review', requires: 'execute' },
-    { id: 'done',             title: 'Done',             type: 'action',  skill: '/done',             requires: 'create-test' },
+    { id: 'resolve-reviewer', title: 'Resolve-reviewer', type: 'action',  skill: '/resolve-reviewer', returnsTo: 'code-review' },
+    { id: 'done',             title: 'Done',             type: 'action',  skill: '/done' },
   ],
   // Cores dos badges de status do card (ortogonais à coluna).
   statuses: {

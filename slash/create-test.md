@@ -12,7 +12,7 @@ description: Cria um guia de teste em português, leigo e humanizado, explicando
 /create-test plan-3     # opcional: especifica o plan
 ```
 
-É a **FASE 6** do fluxo (depois de `/execute`, com a PR já feita). Gera um **guia de teste para leigos** (pt-BR) explicando como validar a resolução/novidade, e posta esse guia como **comentário no card**.
+É a **FASE 6** do fluxo (depois de `/execute`, com a PR já feita). Gera um **guia de teste para leigos** (pt-BR) explicando como validar a resolução/novidade **+ um roteiro estruturado** (fonte da Fase 7 `/execute-test`), e posta o guia como **comentário no card**.
 
 ---
 
@@ -126,6 +126,38 @@ Esta alteração é nos "bastidores" (API), sem tela. Para testar, é preciso ch
 
 Use o **exemplo real** do escopo (ex.: *"Como testar a otimização da esteira logística — o fluxo vai da tela A até a confirmação na tela C, são 3 telas a testar"*).
 
+### Bloco roteiro (estruturado) — obrigatório, ao final do arquivo
+
+Depois do bloco leigo, adicione um **segundo bloco** no mesmo `guia-de-teste.md`: o **roteiro estruturado**. Ele **não** substitui o texto leigo — é uma tabela **por passo**, precisa e sem enfeite, que a **Fase 7 (`/execute-test`)** consome para reproduzir o teste automaticamente. Nenhum código de produto muda por causa deste bloco; é só documentação estruturada.
+
+Cada passo é uma linha com **exatamente** estas colunas:
+
+- **passo** — número sequencial.
+- **tipo** — `front` (mexe em tela) ou `api` (chamada HTTP direta).
+- **rota** — para `front`: a **rota/url** da tela (ex.: `/pedidos/:id`); para `api`: `<MÉTODO> <endpoint>` (ex.: `POST /api/v1/pedidos/123/confirmar`).
+- **elemento** — em linguagem humana, o que se toca (ex.: *"botão Confirmar pedido"*, *"campo Quantidade"*); para `api`, o alvo (*"pedido 123"*).
+- **acao** — o que fazer (ex.: *"clicar"*, *"preencher com 5"*, *"enviar a requisição"*).
+- **antes (X)** — o estado observável **antes** da ação (ex.: *"status = Pendente"*).
+- **depois (Y)** — o estado observável esperado **depois** (ex.: *"status = Confirmado"*).
+- **operacao** — só para passos com **efeito** (mutação): `GET` (leitura, sem efeito), `POST`, `PUT`, `PATCH`, `DELETE`. Deixe `—` quando não houver efeito.
+
+```markdown
+## Roteiro estruturado (para /execute-test)
+
+> Bloco lido pela Fase 7 para reproduzir o teste. Uma linha por passo.
+
+| passo | tipo | rota | elemento | acao | antes (X) | depois (Y) | operacao |
+|---|---|---|---|---|---|---|---|
+| 1 | front | /pedidos/123 | tela do pedido | abrir | — | pedido visível, status "Pendente" | GET |
+| 2 | front | /pedidos/123 | botão "Confirmar" | clicar | status "Pendente" | status "Confirmado" | POST |
+| 3 | api | GET /api/v1/pedidos/123 | pedido 123 | ler estado | — | `{ "status": "confirmado" }` | GET |
+```
+
+Regras do roteiro:
+- **Front-first quando full-stack**: se o fluxo passa pela tela, descreva o passo `front`; só use `api` quando a alteração for de bastidor sem tela, ou para **confirmar o efeito** via leitura.
+- **Seja preciso o suficiente** para decidir o efeito real: a Fase 7 bloqueia execução de passos destrutivos com base neste roteiro. Se um clique de UI dispara uma deleção, marque `operacao: DELETE` nesse passo `front`.
+- **Nunca** coloque credenciais/segredos aqui — só nomes de campos e valores de teste não-sensíveis.
+
 ---
 
 ## Passo 5 — Postar o guia como comentário no card
@@ -157,9 +189,10 @@ No `index.json` do plan, faça **read-modify-write** (preservando o resto):
 ✅ /create-test concluído
 
   Plano:    plan-N — <título>
-  Guia:     plans/plan-N/guia-de-teste.md  (<telas | API>)
+  Guia:     plans/plan-N/guia-de-teste.md  (leigo + roteiro estruturado)
   Card:     <CARD_ID> — guia postado como comentário ✓
   Duração:  <INICIO_CT> → <FIM_CT>
 
-Fluxo linear concluído. Se o reviewer deixar feedback na PR, use /resolve-reviewer.
+Próximo passo: rode /execute-test para executar o roteiro contra qa e capturar evidências.
+(Se o reviewer deixar feedback na PR, use /resolve-reviewer.)
 ```

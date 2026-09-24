@@ -43,7 +43,7 @@ Reinicie o Claude Code após o setup.
 
 `jarvis --setup` copia todo arquivo `.md` da pasta `slash/` deste pacote para `~/.claude/commands/`, registrando-os como slash commands globais. Você pode adicionar seus próprios `.md` e rodar `jarvis --setup` novamente.
 
-O jarvis já inclui um **fluxo de desenvolvimento de software com IA** — do setup à PR pronta para review. São 6 fases lineares (cada uma checa se a anterior foi concluída) + 1 fase avulsa + 1 utilitário. Um `index.json` por plano (em `plans/plan-N/`) é o **estado estruturado** que costura todos os comandos — cada fase faz read-modify-write dele, e o board do kanban o lê para saber o progresso.
+O jarvis já inclui um **fluxo de desenvolvimento de software com IA** — do setup à PR pronta para review, com o teste executado. São 7 fases lineares (cada uma checa se a anterior foi concluída) + 1 fase avulsa + 1 utilitário. Um `index.json` por plano (em `plans/plan-N/`) é o **estado estruturado** que costura todos os comandos — cada fase faz read-modify-write dele, e o board do kanban o lê para saber o progresso.
 
 **Isolamento por `git worktree`:** o fluxo usa worktrees para permitir **vários planos em paralelo** no mesmo monorepo sem colisão. O `/scope` lê de um worktree-base do alvo (`.worktrees/base/<qa|main>`, sempre alinhado ao remote, sem tocar a cópia primária) e o `/execute` trabalha num workspace isolado por plano (`.worktrees/plan-N`, um worktree por repo, com deps instaladas).
 
@@ -54,7 +54,8 @@ O jarvis já inclui um **fluxo de desenvolvimento de software com IA** — do se
 | `/blueprint` | 3 | Gera o planejamento técnico de implementação (incluindo os testes a criar) a partir da spec |
 | `/card` | 4 | Cria o card no Jira via MCP — título padronizado, descrição do plano, status, assignee e comentário do tempo de escopo |
 | `/execute` | 5 | Cria o workspace do plano (worktree + deps por repo), implementa código **e** testes, roda `/code-review` (se existir), abre a PR (linguagem leiga) e acompanha o CI até passar |
-| `/create-test` | 6 | Cria um guia de teste leigo (pt-BR) explicando como validar a alteração e posta como comentário no card |
+| `/create-test` | 6 | Cria um guia de teste leigo (pt-BR) **+ um roteiro estruturado** (fonte da Fase 7) e posta o guia como comentário no card |
+| `/execute-test` | 7 | Sobe a app local (qa), executa o roteiro do `/create-test`, captura evidências redigidas (prints antes/depois + request/response mascarados) e comenta o resultado no card |
 | `/done` | final | Encerra o plano — marca `status:done`/`closedAt` no `index.json` e (opcional) move o card do Jira para o status final |
 | `/code-review` | interno | Revisa uma PR (agentes em paralelo) e comenta o resultado — usado por `/execute` e `/resolve-reviewer` |
 | `/resolve-reviewer` | avulso | Resolve o feedback deixado por um reviewer na PR (no worktree do plano), garante o CI verde e devolve a PR para review |

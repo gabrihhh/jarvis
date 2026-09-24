@@ -6,3 +6,5 @@ node_modules/
 # estado local / runtime — não versionar
 .claude/
 plans/
+plans/*/evidencias/
+.playwright-mcp/

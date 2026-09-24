@@ -50,17 +50,19 @@ Se o arquivo não existir, encerre avisando que o plano não tem `index.json` (r
 
 ---
 
-## Passo 3 — Guard leve: create-test concluído?
+## Passo 3 — Guard leve: execute-test concluído?
 
-Confira `phases["create-test"].done` no objeto lido.
+Confira `phases["execute-test"].done` no objeto lido (é a última fase antes do `/done`).
 
 - Se **true**, siga.
 - Se **false**, avise e confirme:
   ```
-  ⚠️ A fase /create-test ainda não está concluída neste plano.
+  ⚠️ A fase /execute-test ainda não está concluída neste plano.
   Deseja encerrar mesmo assim? (sim / não)
   ```
   Só siga com um **sim** explícito.
+
+> Planos criados antes da Fase 7 podem não ter a chave `phases["execute-test"]`. Nesse caso, trate como não-concluída e confirme com o usuário do mesmo jeito.
 
 ---
 
