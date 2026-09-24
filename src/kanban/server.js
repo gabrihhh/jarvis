@@ -244,7 +244,17 @@ export async function startKanban({ cwd = process.cwd(), open = true } = {}) {
   }
 
   function onHook(body, res) {
-    if (body.card && body.status) sessions.setStatus(body.card, body.status);
+    if (body.card && body.status) {
+      let status = body.status;
+      // `notification` dispara tanto para permissão/pergunta quanto para ociosidade.
+      // Reclassifica pelo texto (server-side only — body.message nunca vai ao DOM).
+      if (body.event === 'notification') {
+        // Ociosidade (~60s) → ignora: o card fica como está (um `done` continua `done`).
+        if (/waiting for your input/i.test(body.message || '')) { sendJson(res, { ok: true }); return; }
+        status = 'blocked'; // fail-safe: mensagem real ou vazia ⇒ blocked
+      }
+      sessions.setStatus(body.card, status);
+    }
     sendJson(res, { ok: true });
   }
 

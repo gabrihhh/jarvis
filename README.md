@@ -72,7 +72,10 @@ Board local que orquestra o fluxo: **cada coluna é uma fase/skill, cada card é
 
 - **Arrastar** um card para uma coluna dispara a skill daquela fase numa sessão própria (contexto novo por coluna).
 - **Clicar** no card abre o terminal nativo já anexado àquela sessão (`jarvis --attach`).
-- **Badges** em tempo real: 🟠 `processing` · 🔴 `blocked` (o Claude te perguntou algo) · 🟢 `done` — via hooks do Claude Code instalados pelo `jarvis --kanban-setup`.
+- **Badges** em tempo real: 🟠 `processing` (o Claude está pensando ou rodando ferramenta) · 🔴 `blocked` (o Claude te perguntou algo/pediu permissão) · 🟢 `done` — via hooks do Claude Code instalados pelo `jarvis --kanban-setup`. Ao responder um `blocked`, o card **volta sozinho** para `processing` assim que o Claude retoma o trabalho; ociosidade (~60s) não altera o status.
+- **Alerta sonoro**: o board toca um tom (sintetizado via Web Audio, sem arquivo/CDN) a cada transição para `blocked` (atenção) ou `done` (conclusão). O áudio é destravado no primeiro clique/tecla no board.
+
+  > Instalações anteriores à v3.3 precisam **re-rodar `jarvis --kanban-setup`** para instalar os hooks `PreToolUse`/`PostToolUse` — sem eles o card não volta para `processing`.
 - **Guards**: só deixa avançar se a fase anterior está concluída no `index.json`.
 - **Descoberta automática**: ao abrir numa pasta com `plans/`, cada `index.json` vira um card na coluna certa.
 - As colunas ↔ skills são configuráveis em `~/.claude/jarvis-kanban.json`.

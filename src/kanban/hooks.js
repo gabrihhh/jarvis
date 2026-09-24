@@ -10,6 +10,8 @@ import http from 'http';
 // Evento do Claude Code → status do card.
 export const HOOK_EVENTS = {
   userpromptsubmit: 'processing', // usuário (ou o kanban) submeteu um prompt → trabalhando
+  pretooluse:       'processing', // Claude vai rodar uma ferramenta → voltou a trabalhar
+  posttooluse:      'processing', // reforço: ferramenta terminou → segue trabalhando
   notification:     'blocked',    // Claude precisa do usuário (pergunta/permissão/idle)
   stop:             'done',       // Claude terminou o turno
 };
@@ -17,6 +19,8 @@ export const HOOK_EVENTS = {
 // Comandos instalados no settings.json (nome do evento no Claude Code → comando).
 export const HOOK_COMMANDS = {
   UserPromptSubmit: 'jarvis --hook userpromptsubmit',
+  PreToolUse:       'jarvis --hook pretooluse',
+  PostToolUse:      'jarvis --hook posttooluse',
   Notification:     'jarvis --hook notification',
   Stop:             'jarvis --hook stop',
 };

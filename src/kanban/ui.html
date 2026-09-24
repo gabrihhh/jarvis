@@ -41,12 +41,59 @@ let BOARD = { columns: [], statuses: {} };
 const cards = new Map();
 let selectedId = null;
 
+// --- alerta sonoro (Web Audio, 100% local — sem arquivo/CDN) ----------------
+// Último status conhecido por card, separado do objeto do card: o evento SSE
+// `card` substitui o objeto inteiro, então uma flag no card seria descartada.
+const lastStatus = new Map();
+let audioCtx = null;
+
+// Destrava/retoma o AudioContext — chamado só no primeiro gesto no board
+// (autoplay do browser exige interação). Idempotente e à prova de erro.
+function unlockAudio() {
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return;
+    if (!audioCtx) audioCtx = new Ctx();
+    if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => { /* navegador recusou o resume — segue sem áudio */ });
+  } catch { /* sem áudio disponível — segue em silêncio */ }
+}
+
+// Toca um alerta curto e confortável. Silencioso enquanto o contexto não foi
+// destravado por gesto (não gera erro no console).
+function playTone(kind) {
+  if (!audioCtx || audioCtx.state !== 'running') return;
+  const now = audioCtx.currentTime;
+  // blocked = atenção (dois beeps agudos e curtos); done = conclusão (suave, sobe).
+  const notes = kind === 'blocked'
+    ? [{ f: 880, t: 0, d: 0.12 }, { f: 1175, t: 0.15, d: 0.12 }]
+    : [{ f: 523, t: 0, d: 0.16 }, { f: 784, t: 0.16, d: 0.24 }];
+  const peak = kind === 'blocked' ? 0.08 : 0.05;
+  for (const n of notes) {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = kind === 'blocked' ? 'triangle' : 'sine';
+    osc.frequency.value = n.f;
+    const start = now + n.t, end = start + n.d;
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.linearRampToValueAtTime(peak, start + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, end);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(start);
+    osc.stop(end + 0.02);
+  }
+}
+
 async function boot() {
   BOARD = await (await fetch('/api/board')).json();
   const state = await (await fetch('/api/state')).json();
-  for (const c of state.cards) cards.set(c.id, c);
+  for (const c of state.cards) { cards.set(c.id, c); lastStatus.set(c.id, c.status); } // semeia sem tocar
   render();
   listen();
+
+  // destrava o áudio no primeiro gesto (clique/drag/tecla); depois se remove.
+  const gestures = ['pointerdown', 'keydown', 'dragstart'];
+  const onGesture = () => { unlockAudio(); for (const g of gestures) document.removeEventListener(g, onGesture); };
+  for (const g of gestures) document.addEventListener(g, onGesture);
 
   // seleção + Del: clicar no card seleciona; Del pede confirmação e apaga.
   document.addEventListener('keydown', (e) => {
@@ -62,11 +109,20 @@ async function boot() {
 
 function listen() {
   const es = new EventSource('/events');
-  es.addEventListener('state', (e) => { for (const c of JSON.parse(e.data).cards) cards.set(c.id, c); render(); });
-  es.addEventListener('card', (e) => { const c = JSON.parse(e.data); cards.set(c.id, c); render(); });
-  es.addEventListener('status', (e) => { const { id, status } = JSON.parse(e.data); const c = cards.get(id); if (c) { c.status = status; render(); } });
-  es.addEventListener('exit', (e) => { const c = cards.get(JSON.parse(e.data).id); if (c) { c.status = 'idle'; render(); } });
-  es.addEventListener('delete', (e) => { const { id } = JSON.parse(e.data); cards.delete(id); if (selectedId === id) selectedId = null; render(); });
+  // reconexão reenvia `state` → re-semeia o lastStatus sem tocar (nunca soa na hidratação).
+  es.addEventListener('state', (e) => { for (const c of JSON.parse(e.data).cards) { cards.set(c.id, c); lastStatus.set(c.id, c.status); } render(); });
+  es.addEventListener('card', (e) => { const c = JSON.parse(e.data); cards.set(c.id, c); lastStatus.set(c.id, c.status); render(); }); // já tocou no `status` anterior
+  es.addEventListener('status', (e) => {
+    const { id, status } = JSON.parse(e.data);
+    const c = cards.get(id);
+    if (!c) return;
+    if (lastStatus.get(id) !== status && (status === 'blocked' || status === 'done')) playTone(status);
+    lastStatus.set(id, status);
+    c.status = status;
+    render();
+  });
+  es.addEventListener('exit', (e) => { const { id } = JSON.parse(e.data); const c = cards.get(id); if (c) { c.status = 'idle'; lastStatus.set(id, 'idle'); render(); } });
+  es.addEventListener('delete', (e) => { const { id } = JSON.parse(e.data); cards.delete(id); lastStatus.delete(id); if (selectedId === id) selectedId = null; render(); });
 }
 
 function render() {

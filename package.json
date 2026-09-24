@@ -1,6 +1,6 @@
 {
   "name": "@gabrihhh/jarvis",
-  "version": "3.2.0",
+  "version": "3.3.0",
   "description": "Claude Code terminal dashboard, real-time status bar + dev-flow kanban",
   "bin": {
     "jarvis": "bin/jarvis.js"
