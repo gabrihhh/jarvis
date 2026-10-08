@@ -1,6 +1,6 @@
 ---
 name: card
-description: Cria a tarefa no Jira a partir do plano de implementação — escolhe a organização/board, cria o card com título padronizado e descrição do plano, define status, atribui ao usuário, comenta o tempo do scope e vincula o id ao plan
+description: Concentra toda a interação com o Jira — escolhe a organização/board, cria o card pai (título padronizado, descrição = plano de implementação), posta a spec como comentário, materializa as subtasks planejadas no blueprint, define status, atribui ao usuário, comenta o tempo do scope e vincula tudo ao index.json
 ---
 
 # /card — Criação do Card no Jira
@@ -12,7 +12,7 @@ description: Cria a tarefa no Jira a partir do plano de implementação — esco
 /card plan-3     # opcional: especifica o plan
 ```
 
-É a **FASE 4** do fluxo (depois de `/blueprint`). Cria o card no Jira via **MCP**, preenchendo com o máximo de informações possível, e vincula o id do card ao plan.
+É a **FASE 4** do fluxo (depois de `/blueprint`). **Concentra toda a interação com o Jira** via **MCP**: cria o card pai (descrição = plano de implementação), posta a spec como comentário, **materializa as subtasks** planejadas no `/blueprint` e vincula tudo ao `index.json`. O `/scope` e o `/blueprint` **não** tocam no Jira — só o `/card`.
 
 ---
 
@@ -22,6 +22,8 @@ description: Cria a tarefa no Jira a partir do plano de implementação — esco
 - **Achar antes de criar:** se o plano já tem um card no Jira (`jira` no `index.json`, ou o usuário informa um id), **vincule o existente** — não crie outro.
 - **Nunca crie o card** sem antes mostrar título + descrição e ter os dados corretos (organização, tipo, branch).
 - Assim que achar/criar o card, **salve na hora** `jira`, `jiraUrl` e `jiraSummary` no `index.json` (read-modify-write) — antes de qualquer enriquecimento.
+- **Descrição do card pai = `plano-implementacao.md`; comentário no pai = `spec.md`.**
+- **Subtasks:** o `/blueprint` já planejou em `index.json.subtasks`; aqui você **cria** cada uma como sub-task do card pai, define a descrição dela e grava `jira`/`jiraUrl` de volta no `index.json`. Se `subtasks` estiver **vazio**, não cria nenhuma (fica tudo no pai).
 - **Guard:** só roda se o `/blueprint` estiver **concluído** no `index.json` (`phases["blueprint"].done`).
 - Toda escrita no `index.json` é **read-modify-write**: leia o objeto inteiro, altere só o campo desta fase e regrave (Write, JSON válido). **Nunca** apague dado de outra fase.
 - Requer o **MCP do Jira** conectado.
@@ -41,9 +43,10 @@ echo "${JARVIS_PLAN:-}"
 ls -d "$MONOREPO"/plans/plan-* 2>/dev/null | sed 's#.*/plan-##' | sort -n | tail -1
 cat "$MONOREPO/plans/plan-$N/index.json"
 cat "$MONOREPO/plans/plan-$N/plano-implementacao.md"
+cat "$MONOREPO/plans/plan-$N/spec.md"
 ```
 
-Extraia do `index.json`: **título** (`title`), **tipo** (`type`), **branch base** (`base`) e os horários de início/fim do `/scope` (`phases["scope"].startedAt` / `.finishedAt`).
+Extraia do `index.json`: **título** (`title`), **tipo** (`type`), **branch base** (`base`), as **subtasks planejadas** (`subtasks`) e os horários de início/fim do `/scope` (`phases["scope"].startedAt` / `.finishedAt`). Guarde o conteúdo de `plano-implementacao.md` (vira a **descrição** do card pai) e de `spec.md` (vira **comentário** no card pai).
 
 Registre o início desta fase:
 
@@ -152,7 +155,34 @@ Assim que tiver o card (achado ou criado), faça **read-modify-write** no `index
 
 ---
 
-## Passo 7 — Definir o status (Desenvolvimento)
+## Passo 7 — Postar a spec como comentário no card pai
+
+Poste o conteúdo de `spec.md` como **comentário** no card pai (`addCommentToJiraIssue` no `CARD_ID`). É a especificação do `/scope` anexada ao card.
+
+Confirme que o comentário foi criado. (A descrição do card já é o `plano-implementacao.md`, definida no Passo 6.)
+
+---
+
+## Passo 8 — Materializar as subtasks no Jira (se houver)
+
+Leia `subtasks` do `index.json` (planejadas pelo `/blueprint`).
+
+- Se **vazio** (`subtasks: []`): **não crie nenhuma** — a alteração é simples e fica tudo no card pai. Pule para o Passo 9.
+- Se houver itens, descubra o tipo de issue de **sub-task** do projeto (`getJiraProjectIssueTypesMetadata` — procure o tipo que exige `parent`, ex.: "Sub-task"/"Subtarefa"). Se o projeto **não tiver** sub-task, **pare e pergunte** como proceder (criar como tasks vinculadas ao pai ou deixar tudo no pai).
+
+Para **cada** item de `subtasks`:
+- **Idempotência:** se já tiver `jira` preenchido (re-rodando o `/card`), **pule** — não recrie.
+- Crie a sub-task (`createJiraIssue` com `parent = CARD_ID` e o tipo de sub-task), com:
+  - **Título:** `<title>` do item (opcionalmente prefixado com o `scope`, ex.: `[api-vena-core] <title>`).
+  - **Descrição:** `<description>` do item (o que *aquela* subtask deve fazer).
+- Atribua a sub-task ao usuário atual (`accountId` do Passo 3).
+- **Salve na hora** no `index.json` (read-modify-write): no item correspondente de `subtasks`, grave `jira` e `jiraUrl` da sub-task criada — **sem** apagar o resto.
+
+> O card **pai** carrega o plano completo (descrição) + a spec (comentário); cada **filho** carrega só o que ele deve fazer.
+
+---
+
+## Passo 9 — Definir o status (Desenvolvimento)
 
 Consulte as transições/status disponíveis do card (`getTransitionsForJiraIssue`).
 
@@ -166,14 +196,14 @@ Consulte as transições/status disponíveis do card (`getTransitionsForJiraIssu
 
 ---
 
-## Passo 8 — Atribuir ao usuário e enriquecer o card
+## Passo 10 — Atribuir ao usuário e enriquecer o card
 
 - **Atribua** o card ao usuário atual (`editJiraIssue` com o `accountId` do Passo 3).
 - Preencha o card com o **máximo de informações** possível neste momento (labels/componentes relevantes, tipo, referência ao plan-N).
 
 ---
 
-## Passo 9 — Comentar o tempo do scope
+## Passo 11 — Comentar o tempo do scope
 
 Calcule a duração do `/scope` (início → fim de `phases["scope"]` no `index.json`) e adicione como **comentário no card** (`addCommentToJiraIssue`):
 
@@ -183,7 +213,7 @@ Tempo de escopo (/scope): 2026-09-10 09:12 → 2026-09-10 10:05 (~53 min)
 
 ---
 
-## Passo 10 — Vincular o card ao `index.json` e concluir
+## Passo 12 — Vincular o card ao `index.json` e concluir
 
 Registre o fim desta fase:
 
@@ -192,7 +222,7 @@ date '+%Y-%m-%d %H:%M'
 ```
 Guarde como `FIM_CARD`.
 
-No `index.json` do plan, faça **read-modify-write** (preservando o resto — `jira`/`jiraUrl`/`jiraSummary` já foram salvos no Passo 6):
+No `index.json` do plan, faça **read-modify-write** (preservando o resto — `jira`/`jiraUrl`/`jiraSummary` foram salvos no Passo 6 e os `jira`/`jiraUrl` de cada subtask no Passo 8):
 - `branch = "<tipo>/<base>/<CARD_ID>"` (ex.: `fix/main/VENA-223`)
 - `phases["card"].done = true` · `phases["card"].startedAt = "<INICIO_CARD>"` · `phases["card"].finishedAt = "<FIM_CARD>"`
 
@@ -200,13 +230,14 @@ No `index.json` do plan, faça **read-modify-write** (preservando o resto — `j
 
 ---
 
-## Passo 11 — Resumo Final
+## Passo 13 — Resumo Final
 
 ```
 ✅ /card concluído
 
   Plano:    plan-N — <título>
-  Card:     VENA-223  ·  <url>
+  Card:     VENA-223  ·  <url>   (descrição = plano · spec como comentário)
+  Subtasks: <n> criadas (ou nenhuma)
   Board:    <PROJECT_KEY> (<ORG>)
   Status:   Desenvolvimento
   Assignee: você

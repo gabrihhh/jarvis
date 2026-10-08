@@ -1,6 +1,6 @@
 ---
 name: blueprint
-description: Gera o planejamento técnico de implementação a partir da spec do /scope — analisa a spec e os repositórios (como está hoje × o que fazer), inclui os testes a criar e salva plano-implementacao.md no plan
+description: Gera o planejamento técnico de implementação a partir da spec do /scope — analisa a spec e os repositórios (como está hoje × o que fazer), inclui os testes a criar, planeja a decomposição em subtasks no index.json e salva plano-implementacao.md no plan
 ---
 
 # /blueprint — Planejamento de Implementação
@@ -97,6 +97,7 @@ Com o retorno do sub-agent, grave `"$MONOREPO/plans/plan-$N/plano-implementacao.
   - `e2e:` … (arquivo/onde criar, com o stack do plan)
   - `unit:` … (arquivo/onde criar, com o stack do plan)
 - **Pontos de atenção** — riscos, dependências entre repos, ordem de merge.
+- **Decomposição em subtasks** — a lista planejada no Passo 5 (ou "Sem subtasks" quando não fizer sentido).
 
 Formato sugerido:
 
@@ -123,11 +124,34 @@ Formato sugerido:
 
 ## Pontos de atenção
 - <risco / dependência / ordem>
+
+## Decomposição em subtasks
+<!-- a lista planejada no Passo 5 — ou "Sem subtasks: alteração simples num único ponto" -->
+- [<repo ou área>] <título> — <o que essa subtask deve fazer>
 ```
 
 ---
 
-## Passo 5 — Atualizar o `index.json`
+## Passo 5 — Planejar a decomposição em subtasks (só quando faz sentido)
+
+O `/blueprint` **planeja** as subtasks (é quem conhece os repos/áreas); quem **cria no Jira** é o `/card`. **Não toque no Jira aqui** — só registre o plano no `index.json` e no markdown.
+
+Decida a decomposição:
+- **Multi-repo** → **1 subtask por repositório** envolvido.
+- **Um único repo, mas várias áreas/módulos** separáveis → 1 subtask **por área**.
+- **Alteração simples num único ponto** → **sem subtasks**: deixe `subtasks: []` (fica tudo no card pai).
+
+Para cada subtask planejada, monte um objeto (o `/card` preenche `jira`/`jiraUrl` ao materializar):
+
+```json
+{ "scope": "<repo ou área>", "title": "<título curto>", "description": "<o que ESSA subtask deve fazer>", "jira": null, "jiraUrl": null }
+```
+
+Repita a mesma lista na seção **"Decomposição em subtasks"** do `plano-implementacao.md` (leitura humana).
+
+---
+
+## Passo 6 — Atualizar o `index.json`
 
 Registre o horário de fim:
 
@@ -137,13 +161,14 @@ date '+%Y-%m-%d %H:%M'
 Guarde como `FIM_BP`.
 
 No `index.json` do plan, faça **read-modify-write** (leia o objeto inteiro, altere só o abaixo, regrave com Write preservando o resto):
+- `subtasks = [<lista planejada no Passo 5>]` (ou `[]` se não fizer sentido)
 - `phases["blueprint"].done = true`
 - `phases["blueprint"].startedAt = "<INICIO_BP>"` · `phases["blueprint"].finishedAt = "<FIM_BP>"`
 - `artifacts.blueprint = "plano-implementacao.md"`
 
 ---
 
-## Passo 6 — Resumo Final
+## Passo 7 — Resumo Final
 
 ```
 ✅ /blueprint concluído
@@ -151,7 +176,8 @@ No `index.json` do plan, faça **read-modify-write** (leia o objeto inteiro, alt
   Plano:    plan-N — <título>
   Gerado:   plans/plan-N/plano-implementacao.md
   Testes:   <n> e2e · <n> unit planejados
+  Subtasks: <n> planejadas (ou nenhuma)
   Duração:  <INICIO_BP> → <FIM_BP>
 
-Próximo passo: rode /card para criar a tarefa no Jira.
+Próximo passo: rode /card para criar a tarefa no Jira (card pai + subtasks).
 ```

@@ -1,4 +1,4 @@
-import { readFileSync } from 'fs';
+import { readFileSync, statSync } from 'fs';
 import { join } from 'path';
 
 // Leitura do index.json de um plano — a fonte de verdade ESTRUTURADA do fluxo,
@@ -27,6 +27,14 @@ export function readIndex(cwd, plan) {
   if (!plan) return null;
   try { return JSON.parse(readFileSync(indexPath(cwd, plan), 'utf8')); }
   catch { return null; }
+}
+
+// mtime (ms) do index.json — usado pelo reconciliador do board para detectar,
+// ao vivo, que um plano mudou no disco (0 se o arquivo não existir).
+export function indexMtime(cwd, plan) {
+  if (!plan) return 0;
+  try { return statSync(indexPath(cwd, plan)).mtimeMs; }
+  catch { return 0; }
 }
 
 export function phaseDone(index, key) {

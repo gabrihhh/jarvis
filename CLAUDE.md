@@ -24,6 +24,23 @@ Não há step de build — o projeto é ESM puro (`"type": "module"`), Node.js >
 
 ---
 
+## Fluxo de desenvolvimento com IA (slash commands em `slash/`)
+
+O jarvis entrega um fluxo de desenvolvimento como slash commands (copiados para `~/.claude/commands/`
+por `jarvis --setup`). Ordem linear, cada fase checa a anterior no `index.json`:
+
+`/setup` → `/scope` → `/blueprint` → `/card` → `/execute` → `/create-test` → `/execute-test` → `/done`
+(+ `/resolve-reviewer` avulso, `/worktree` utilitário, `/code-review` interno).
+
+- **Dono da verdade:** `plans/plan-N/index.json` — JSON válido, read-modify-write por fase, **nunca** apague dado de outra fase.
+- **Jira concentrado no `/card`** (roda após o blueprint): cria o card pai (descrição = plano, comentário = spec) e materializa as **subtasks** planejadas pelo `/blueprint` em `index.json.subtasks` (só quando faz sentido). `/scope` e `/blueprint` **não** tocam no Jira.
+- **Mapa completo + onde achar cada detalhe + schema do `index.json`:** 📄 `docs/fluxo-desenvolvimento-ia.md`.
+- **Detalhe executável de cada fase:** o próprio `slash/<nome>.md`.
+
+Ao mexer no fluxo, mantenha `docs/fluxo-desenvolvimento-ia.md`, as `slash/*.md` e o `README.md` em sincronia.
+
+---
+
 ## Estrutura do projeto
 
 ```

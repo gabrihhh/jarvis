@@ -1,6 +1,6 @@
 # Spec — `jarvis --kanban`
 
-Board kanban local que orquestra o **fluxo de desenvolvimento com IA** (`docs/fluxo-desenvolvimento-ia.drawio`).
+Board kanban local que orquestra o **fluxo de desenvolvimento com IA** (`docs/fluxo-desenvolvimento-ia.md`).
 Cada coluna é uma fase/skill do fluxo; cada card é um plano de trabalho. Arrastar um card dispara a
 skill daquela coluna numa sessão do Claude Code rodando por trás (num PTY próprio do jarvis), e clicar
 no card abre o terminal daquela sessão.

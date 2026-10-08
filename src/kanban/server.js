@@ -11,7 +11,7 @@ import { ipcEndpoint, lineReader } from './ipc.js';
 import { openTerminal, openBrowser } from './launch.js';
 import { loadCards, saveCards } from './store.js';
 import { watchPlans, listPlanDirs } from './plans.js';
-import { readIndex, progress, deriveColumn } from './planIndex.js';
+import { readIndex, indexMtime, progress, deriveColumn } from './planIndex.js';
 import { loadPty } from './pty.js';
 import { canonicalPath, projectId, validateFolder, computeTabLabels } from './paths.js';
 import { loadTabPaths, saveTabPaths, pruneTabPaths } from './tabs.js';
@@ -55,6 +55,7 @@ export async function startKanban({ cwd = process.cwd(), open = true } = {}) {
     const id = projectId(cwd);
     const sessions = new SessionManager(pty);
     const cards = new Map();          // id → { id, name, column, plan, status }
+    const planMtime = new Map();      // plan → mtime do index.json visto por último (reconcile)
     const opening = new Set();        // sessões com terminal abrindo (trava anti-duplo-clique)
     const openingTimers = new Map();  // sessão → timer de fallback da trava
 
@@ -79,6 +80,8 @@ export async function startKanban({ cwd = process.cwd(), open = true } = {}) {
       return { ...card, project: id, name, jira: idx.jira || null, title: idx.title || null, progress: progress(idx, PHASE_IDS) };
     };
 
+    const cardByPlan = (plan) => { for (const c of cards.values()) if (c.plan === plan) return c; return null; };
+
     // Auto-descoberta: planos com index.json que ainda não são cards viram cards,
     // na coluna derivada das fases concluídas (board populado ao abrir a aba).
     for (const plan of listPlanDirs(cwd)) {
@@ -95,6 +98,8 @@ export async function startKanban({ cwd = process.cwd(), open = true } = {}) {
       boundPlans.add(plan);
     }
     persist();
+    // Semeia o mtime de cada plano já conhecido → o reconcile só reage a mudanças futuras.
+    for (const c of cards.values()) if (c.plan) planMtime.set(c.plan, indexMtime(cwd, c.plan));
 
     // O hook precisa saber pra ONDE e QUAL projeto reportar → env de todo `claude`.
     // Injetado depois de obter o `port` e antes de qualquer sessions.run.
@@ -119,7 +124,8 @@ export async function startKanban({ cwd = process.cwd(), open = true } = {}) {
       if (!card || card.column !== column) return;
       card.status = status;
       broadcast('status', { project: id, id: cardId, status });
-      if (status === 'done') broadcast('card', cardView(card));
+      // Fase concluída pela sessão do kanban → re-deriva a coluna na hora (anda o card).
+      if (status === 'done') { broadcast('card', cardView(card)); reconcile(); }
     });
     sessions.on('exit', ({ id: sid }) => {
       const [cardId, column] = splitSession(sid);
@@ -127,21 +133,61 @@ export async function startKanban({ cwd = process.cwd(), open = true } = {}) {
       if (!card || card.column !== column) return;
       card.status = 'idle';
       broadcast('exit', { project: id, id: cardId });
+      reconcile(); // sessão encerrou → card idle → re-deriva/avança a coluna
     });
 
-    // Vínculo card ↔ plan-N: quando o /scope cria um novo plano, amarra ao card
-    // mais antigo aguardando (FIFO cobre uso sequencial e degrada bem).
-    const planWatcher = watchPlans(cwd, (plan) => {
-      if (boundPlans.has(plan)) return;
-      const cardId = pendingBind.shift();
-      if (!cardId) return;
-      const card = cards.get(cardId);
-      if (!card) return;
-      card.plan = plan;
-      boundPlans.add(plan);
-      persist();
-      broadcast('card', cardView(card));
-    });
+    // Reconciliador: o `index.json` de cada plano é a FONTE DA VERDADE. Varre
+    // TODOS os plans/*/index.json (chamado pelo watchPlans a cada mudança/3s) e
+    // reflete no board ao vivo, SEM disparar skills nem mexer na coluna de um card
+    // em andamento (só auto-move p/ 'done' quando o plano é encerrado):
+    //  - plano sem card → vincula a um card pendente (FIFO do /scope) ou cria um card novo;
+    //  - index.json mudou no disco → rebroadcast (progresso/título/jira) e, se
+    //    `status === 'done'`, move o card para a coluna 'done'.
+    function reconcile() {
+      let dirty = false;
+      for (const plan of listPlanDirs(cwd)) {
+        const idx = readIndex(cwd, plan);
+        if (!idx) continue;
+
+        let card = cardByPlan(plan);
+
+        // (1) plano ainda não representado → vincula a um card pendente ou cria novo
+        if (!card) {
+          const pendingId = pendingBind.shift();
+          const pending = pendingId ? cards.get(pendingId) : null;
+          if (pending) {
+            pending.plan = plan;
+            card = pending;
+          } else {
+            card = { id: plan, name: idx.title || plan, column: deriveColumn(board, idx, firstColumnId(board)), plan, status: 'idle' };
+            cards.set(plan, card);
+          }
+          boundPlans.add(plan);
+          planMtime.set(plan, indexMtime(cwd, plan));
+          dirty = true;
+          broadcast('card', cardView(card));
+          continue;
+        }
+
+        // (2) card existente → o index.json MANDA: o card "anda" pelo board conforme
+        //     as fases concluem (deriveColumn = coluna da última fase feita; encerrado
+        //     → done). EXCEÇÃO: enquanto uma fase roda AGORA pela sessão do kanban
+        //     (status processing/blocked), mantém o card na coluna onde foi solto —
+        //     senão ele voltaria no meio da execução. Quando a sessão termina (idle/
+        //     done), o card re-deriva e avança.
+        let changed = false;
+        const running = card.status === 'processing' || card.status === 'blocked';
+        if (!running) {
+          const col = deriveColumn(board, idx, card.column);
+          if (col !== card.column) { card.column = col; changed = true; }
+        }
+        const m = indexMtime(cwd, plan);
+        if (m && m !== planMtime.get(plan)) { planMtime.set(plan, m); changed = true; }
+        if (changed) { dirty = true; broadcast('card', cardView(card)); }
+      }
+      if (dirty) persist();
+    }
+    const planWatcher = watchPlans(cwd, reconcile);
 
     const close = () => {
       try { planWatcher.close(); } catch { /* */ }

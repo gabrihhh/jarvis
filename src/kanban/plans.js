@@ -12,22 +12,18 @@ export function listPlanDirs(cwd) {
   }
 }
 
-// Chama onNew(planName) quando um novo diretório plan-N aparece em plans/.
-// Usa fs.watch (reação imediata) + polling de 3s (fallback robusto/cross-platform).
-export function watchPlans(cwd, onNew) {
+// Dispara onChange() sempre que algo em plans/ pode ter mudado — novo/removido
+// plan-N (via fs.watch, reação imediata) OU periodicamente a cada 3s (fallback
+// robusto/cross-platform, que também cobre EDIÇÃO de index.json dentro das
+// subpastas — fs.watch não-recursivo não pega escrita em arquivo de subdir).
+// O caller re-varre todos os plans/*/index.json (o index.json é a fonte da verdade).
+export function watchPlans(cwd, onChange) {
   const dir = join(cwd, 'plans');
   try { mkdirSync(dir, { recursive: true }); } catch { /* */ }
 
-  let known = new Set(listPlanDirs(cwd));
-  const check = () => {
-    for (const p of listPlanDirs(cwd)) {
-      if (!known.has(p)) { known.add(p); onNew(p); }
-    }
-  };
-
   let watcher = null;
-  try { watcher = watch(dir, check); } catch { /* fs.watch indisponível → só polling */ }
-  const timer = setInterval(check, 3000);
+  try { watcher = watch(dir, () => onChange()); } catch { /* fs.watch indisponível → só polling */ }
+  const timer = setInterval(() => onChange(), 3000);
 
   return {
     close() {

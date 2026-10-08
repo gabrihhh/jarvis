@@ -51,8 +51,8 @@ O jarvis já inclui um **fluxo de desenvolvimento de software com IA** — do se
 |---|---|---|
 | `/setup` | 1 | Verifica MCP do Jira e GitHub CLI, identifica o monorepo e classifica as pastas em API/front — salva em `.claude/estrutura.md` |
 | `/scope` | 2 | Atualiza o worktree-base do alvo (main/qa) a partir do remote, mapeia o fluxo front→API, tira todas as dúvidas, cria e revisa a especificação (com cenários de teste) e salva em `plans/plan-N/` |
-| `/blueprint` | 3 | Gera o planejamento técnico de implementação (incluindo os testes a criar) a partir da spec |
-| `/card` | 4 | Cria o card no Jira via MCP — título padronizado, descrição do plano, status, assignee e comentário do tempo de escopo |
+| `/blueprint` | 3 | Gera o planejamento técnico de implementação (incluindo os testes a criar) a partir da spec e **planeja a decomposição em subtasks** (só quando faz sentido) no `index.json` |
+| `/card` | 4 | **Concentra toda a interação com o Jira** (roda após o blueprint): cria o card pai (descrição = plano, comentário = spec), materializa as subtasks planejadas, define status, assignee e comenta o tempo de escopo |
 | `/execute` | 5 | Cria o workspace do plano (worktree + deps por repo), implementa código **e** testes, roda `/code-review` (se existir), abre a PR (linguagem leiga) e acompanha o CI até passar |
 | `/create-test` | 6 | Cria um guia de teste leigo (pt-BR) **+ um roteiro estruturado** (fonte da Fase 7) e posta o guia como comentário no card |
 | `/execute-test` | 7 | Sobe a app local (qa), executa o roteiro do `/create-test`, captura evidências redigidas (prints antes/depois + request/response mascarados) e comenta o resultado no card |
@@ -61,7 +61,7 @@ O jarvis já inclui um **fluxo de desenvolvimento de software com IA** — do se
 | `/resolve-reviewer` | avulso | Resolve o feedback deixado por um reviewer na PR (no worktree do plano), garante o CI verde e devolve a PR para review |
 | `/worktree` | utilitário | Lista os workspaces ativos por plano e remove com segurança o workspace de um plano concluído (`/worktree clean plan-N`) |
 
-> O desenho completo do fluxo está em [`docs/fluxo-desenvolvimento-ia.drawio`](docs/fluxo-desenvolvimento-ia.drawio).
+> O mapa completo do fluxo (fases, artefatos, efeitos no Jira e o schema do `index.json`) está em [`docs/fluxo-desenvolvimento-ia.md`](docs/fluxo-desenvolvimento-ia.md).
 
 ---
 
@@ -78,7 +78,7 @@ Board local que orquestra o fluxo: **cada coluna é uma fase/skill, cada card é
 
   > Instalações anteriores à v3.3 precisam **re-rodar `jarvis --kanban-setup`** para instalar os hooks `PreToolUse`/`PostToolUse` — sem eles o card não volta para `processing`.
 - **Guards**: só deixa avançar se a fase anterior está concluída no `index.json`.
-- **Descoberta automática**: ao abrir numa pasta com `plans/`, cada `index.json` vira um card na coluna certa.
+- **Descoberta automática e contínua**: o board é a fonte de verdade `plans/*/index.json` — varre **todos** os `index.json` ao abrir **e ao vivo** (fs.watch + poll). Qualquer plano (inclusive criado fora do kanban) vira card na coluna certa, o progresso/título/card do Jira atualizam sozinhos e, quando `/done` marca `status:done`, o card vai para **Done** — sem disparar skills.
 - As colunas ↔ skills são configuráveis em `~/.claude/jarvis-kanban.json`.
 
 Backend: uma sessão PTY por card via `node-pty` (cross-platform — ConPTY no Windows), com ponte de attach por socket local.
